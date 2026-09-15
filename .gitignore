@@ -1,0 +1,27 @@
+# Dependencies
+/vendor/
+
+# Logs and generated files
+*.log
+**/error_log.txt
+table-fetch/error_log.txt
+
+# Environment and secrets (do not commit credentials)
+.env
+.env.local
+*.env
+php/config/microsoft_sso.php
+php/config/vapid.php
+php/config/geotab.php
+
+# IDE and OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Composer
+composer.lock
+composer.phar
