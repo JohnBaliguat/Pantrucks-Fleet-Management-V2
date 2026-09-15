@@ -35,3 +35,14 @@ if (!defined('GEOTAB_PASSWORD')) define('GEOTAB_PASSWORD', 'CHANGE_ME');
 // ---------------------------------------------------------------------
 if (!defined('GEOTAB_DIAG_ODOMETER'))     define('GEOTAB_DIAG_ODOMETER',     'DiagnosticOdometerAdjustmentId');
 if (!defined('GEOTAB_DIAG_ENGINE_HOURS')) define('GEOTAB_DIAG_ENGINE_HOURS', 'DiagnosticEngineHoursAdjustmentId');
+
+// ---------------------------------------------------------------------
+// Phase 4 (fuel reconciliation) — cumulative "total fuel used" diagnostic
+// (litres). Delta between two ticket times = engine-measured litres burned.
+// Verify against a real StatusData record if fuel doesn't reconcile.
+// GEOTAB_FUEL_VARIANCE_PCT: litres variance (%) above which a ticket is
+// flagged. GEOTAB_KM_VARIANCE_PCT: same for reported distance.
+// ---------------------------------------------------------------------
+if (!defined('GEOTAB_DIAG_TOTAL_FUEL'))   define('GEOTAB_DIAG_TOTAL_FUEL',   'DiagnosticDeviceTotalFuelId');
+if (!defined('GEOTAB_FUEL_VARIANCE_PCT')) define('GEOTAB_FUEL_VARIANCE_PCT', 15);
+if (!defined('GEOTAB_KM_VARIANCE_PCT'))   define('GEOTAB_KM_VARIANCE_PCT',   15);
