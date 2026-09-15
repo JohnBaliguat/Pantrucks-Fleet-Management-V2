@@ -19,6 +19,7 @@ $isCli = (PHP_SAPI === 'cli');
 
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../lib/geotab_client.php';
+require_once __DIR__ . '/../lib/geotab_geofence.php';
 
 if (!$isCli) {
     session_start();
@@ -73,6 +74,10 @@ try {
           WHERE geotab_device_id = :device_id"
     );
 
+    // device_id => [lat, lng, posAt] for devices with a valid fix this poll,
+    // so we can reconcile geofence membership after positions are committed.
+    $touched = [];
+
     $conn->beginTransaction();
     foreach ($feed['data'] as $rec) {
         $seen++;
@@ -87,13 +92,17 @@ try {
             $lat = null;
             $lng = null;
         }
+        $posAt = pt_geotab_parse_dt($rec['dateTime'] ?? null);
+        if ($lat !== null && $lng !== null) {
+            $touched[(string)$deviceId] = [$lat, $lng, $posAt];
+        }
 
         $update->execute([
             ':lat'       => $lat,
             ':lng'       => $lng,
             ':speed'     => isset($rec['speed'])   && is_numeric($rec['speed'])   ? (float)$rec['speed']   : null,
             ':bearing'   => isset($rec['bearing']) && is_numeric($rec['bearing']) ? (float)$rec['bearing'] : null,
-            ':pos_at'    => pt_geotab_parse_dt($rec['dateTime'] ?? null),
+            ':pos_at'    => $posAt,
             ':comm'      => !empty($rec['isDeviceCommunicating']),
             ':device_id' => (string)$deviceId,
         ]);
@@ -101,6 +110,41 @@ try {
         $updated += $update->rowCount();
     }
     $conn->commit();
+
+    // ---- Geofence pass (Phase 2) -------------------------------------
+    // For each linked unit that got a fresh fix, reconcile which zone it's in
+    // and log entry/exit. Isolated from the position write so a geofence error
+    // never loses positions.
+    $zoneEvents = 0;
+    if ($touched) {
+        try {
+            $ids = array_keys($touched);
+            $ph  = implode(',', array_fill(0, count($ids), '?'));
+            $ustmt = $conn->prepare(
+                "SELECT unit_id, unit_name, geotab_device_id, current_zone_id
+                   FROM units
+                  WHERE geotab_device_id IN ($ph)"
+            );
+            $ustmt->execute($ids);
+            foreach ($ustmt->fetchAll() as $u) {
+                $dev = (string)$u['geotab_device_id'];
+                if (!isset($touched[$dev])) {
+                    continue;
+                }
+                [$lat, $lng, $posAt] = $touched[$dev];
+                $before = $u['current_zone_id'];
+                $after  = pt_geofence_apply(
+                    $conn, (int)$u['unit_id'], (string)$u['unit_name'],
+                    $lat, $lng, $posAt, $before
+                );
+                if ($after !== $before) {
+                    $zoneEvents++;
+                }
+            }
+        } catch (Throwable $ge) {
+            error_log('[geotab_poll] geofence pass failed: ' . $ge->getMessage());
+        }
+    }
 
     // Persist the new cursor + health.
     $conn->prepare(
@@ -110,7 +154,7 @@ try {
     )->execute([$feed['toVersion'], GEOTAB_POSITION_FEED]);
 
     $elapsed = round(microtime(true) - $startedAt, 2);
-    $summary = "seen=$seen updated=$updated elapsed={$elapsed}s";
+    $summary = "seen=$seen updated=$updated zone_events=$zoneEvents elapsed={$elapsed}s";
     if ($isCli) {
         echo "[geotab_poll] OK — $summary\n";
     } else {
