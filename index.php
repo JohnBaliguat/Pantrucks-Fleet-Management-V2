@@ -41,6 +41,7 @@ $routes = [
     'truck' => 'admin/truck.php',
     'geotab-devices' => 'admin/geotab-devices.php',
     'geotab-zones' => 'admin/geotab-zones.php',
+    'geotab-faults' => 'admin/geotab-faults.php',
     'unitProfile' => 'admin/addunit-page.php',
     'unitEditProfile' => 'admin/updateunit-page.php',
     'containerMonitoring' => 'admin/container_monitoring.php',

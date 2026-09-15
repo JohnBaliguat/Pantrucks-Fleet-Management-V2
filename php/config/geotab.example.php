@@ -26,3 +26,12 @@ if (!defined('GEOTAB_DATABASE')) define('GEOTAB_DATABASE', 'your_database_name')
 if (!defined('GEOTAB_SERVER'))   define('GEOTAB_SERVER',   'my.geotab.com');
 if (!defined('GEOTAB_USER'))     define('GEOTAB_USER',     'api-service@yourcompany.com');
 if (!defined('GEOTAB_PASSWORD')) define('GEOTAB_PASSWORD', 'CHANGE_ME');
+
+// ---------------------------------------------------------------------
+// Phase 3 (vehicle health) — diagnostic ids for odometer & engine hours.
+// These are Geotab's well-known Diagnostic ids and are correct for most
+// databases. If odometer/engine-hours don't populate, look up the exact ids
+// in MyGeotab (a StatusData record's diagnostic) and set them here.
+// ---------------------------------------------------------------------
+if (!defined('GEOTAB_DIAG_ODOMETER'))     define('GEOTAB_DIAG_ODOMETER',     'DiagnosticOdometerAdjustmentId');
+if (!defined('GEOTAB_DIAG_ENGINE_HOURS')) define('GEOTAB_DIAG_ENGINE_HOURS', 'DiagnosticEngineHoursAdjustmentId');
