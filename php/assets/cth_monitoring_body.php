@@ -15,11 +15,9 @@ $dispatchHref = $role === 'admin' ? 'dispatchTiles' : 'dispatch-tiles';
   <link rel="shortcut icon" type="image/png" href="assets/images/logos/LogoFleet.png">
   <link rel="stylesheet" href="assets/css/styles.min.css">
   <link rel="stylesheet" href="assets/css/enhancements.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
   <script src="assets/libs/jquery/dist/jquery.min.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-          integrity="sha256-20nQCchB9co0qIjJ+eD9WeuwWU+wCzZ8x3wQjZB7tQ0=" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     .cth-hero { background:linear-gradient(120deg,#0f172a,#1d4ed8); color:#fff; border-radius:14px; padding:22px 24px; }
     .cth-kpi { border:0; border-radius:12px; box-shadow:0 2px 10px rgba(15,23,42,.08); }
@@ -179,6 +177,10 @@ $dispatchHref = $role === 'admin' ? 'dispatchTiles' : 'dispatch-tiles';
   // ----- Live satellite map (Esri World Imagery via Leaflet) -----------
   let ctmMap = null, ctmMarker = null, ctmPoll = null, ctmDid = null;
   function ctmBuild() {
+    if (typeof L === 'undefined') {
+      $('#ctmMeta').html('<span class="text-danger">Map library could not load (no internet or blocked).</span>');
+      return false;
+    }
     if (ctmMap) { ctmMap.invalidateSize(); return; }
     ctmMap = L.map('ctmMap', { zoomControl: true });
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
@@ -216,7 +218,8 @@ $dispatchHref = $role === 'admin' ? 'dispatchTiles' : 'dispatch-tiles';
     $('#ctmMeta').html('<span class="text-muted">Loading position…</span>');
     $('#ctmOverlay').addClass('open');
     setTimeout(() => {
-      ctmBuild(); ctmMap.invalidateSize();
+      if (ctmBuild() === false || !ctmMap) { return; }
+      ctmMap.invalidateSize();
       if (!isNaN(lat) && !isNaN(lng)) ctmSet(lat, lng, esc(label));
       ctmPollPos(); clearInterval(ctmPoll); ctmPoll = setInterval(ctmPollPos, 15000);
     }, 200);

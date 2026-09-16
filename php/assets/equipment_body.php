@@ -12,8 +12,7 @@
   <link rel="stylesheet" href="assets/css/styles.min.css" />
   <link rel="stylesheet" href="assets/css/enhancements.css" />
   <link rel="stylesheet" href="alert/node_modules/sweetalert2/dist/sweetalert2.min.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     .eq-page-shell { padding-top: 12px; }
     .eq-hero { border: 1px solid rgba(31, 94, 255, 0.08); border-radius: 22px; background: radial-gradient(circle at right top, rgba(31,94,255,.12), transparent 28%), linear-gradient(135deg, #f9fbff 0%, #f1f6ff 55%, #ebf3ff 100%); box-shadow: 0 18px 44px rgba(16,35,63,.06); overflow: hidden; }
@@ -184,8 +183,7 @@
   <script src="assets/libs/simplebar/dist/simplebar.js"></script>
   <script src="alert/node_modules/sweetalert2/dist/sweetalert2.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-          integrity="sha256-20nQCchB9co0qIjJ+eD9WeuwWU+wCzZ8x3wQjZB7tQ0=" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
   function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
   let equipmentHistoryModal = null;
@@ -194,6 +192,10 @@
   let eqMap = null, eqMarker = null, eqPollTimer = null, eqTarget = null;
 
   function eqBuildMap() {
+    if (typeof L === 'undefined') {
+      $('#equipmentMapMeta').html('<span class="text-danger">Map library could not load (no internet or blocked). The location text above still updates.</span>');
+      return false;
+    }
     if (eqMap) { eqMap.invalidateSize(); return; }
     eqMap = L.map('equipmentMap', { zoomControl: true, attributionControl: true });
     // Esri World Imagery — free satellite tiles, no API key.
@@ -246,7 +248,7 @@
     $('#equipmentMapMeta').html('<span class="text-muted">Loading position…</span>');
     // Build the map after the modal is visible so tiles size correctly.
     setTimeout(function () {
-      eqBuildMap();
+      if (eqBuildMap() === false || !eqMap) { return; }
       eqMap.invalidateSize();
       if (lat != null && lng != null) { eqSetMarker(lat, lng, escapeHtml(code)); }
       eqPollPosition();

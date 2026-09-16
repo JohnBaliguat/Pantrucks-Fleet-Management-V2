@@ -42,14 +42,12 @@ while ($gres && ($gr = ($gres)->fetch())) { $gensetNames[] = $gr['unit_name']; }
   <link rel="stylesheet" href="assets/css/styles.min.css" />
   <link rel="stylesheet" href="assets/css/enhancements.css" />
   <link rel="stylesheet" href="alert/node_modules/sweetalert2/dist/sweetalert2.min.css">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
   <script src="assets/libs/jquery/dist/jquery.min.js"></script>
   <script src="assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="alert/node_modules/sweetalert2/dist/sweetalert2.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-          integrity="sha256-20nQCchB9co0qIjJ+eD9WeuwWU+wCzZ8x3wQjZB7tQ0=" crossorigin=""></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <!-- Google Maps JS API — used for reverse-geocoding the Last GPS column. -->
   <script src="https://maps.googleapis.com/maps/api/js?key=<?php echo urlencode(MAPS_API_KEY); ?>" async defer></script>
   <style>
@@ -447,6 +445,10 @@ while ($gres && ($gr = ($gres)->fetch())) { $gensetNames[] = $gr['unit_name']; }
     var ctMap = null, ctMarker = null, ctPoll = null, ctDid = null, ctMapModal = null;
 
     function ctBuildMap() {
+      if (typeof L === 'undefined') {
+        $('#ctMapMeta').html('<span class="text-danger">Map library could not load (no internet or blocked).</span>');
+        return false;
+      }
       if (ctMap) { ctMap.invalidateSize(); return; }
       ctMap = L.map('ctMap', { zoomControl: true });
       L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
@@ -489,7 +491,8 @@ while ($gres && ($gr = ($gres)->fetch())) { $gensetNames[] = $gr['unit_name']; }
       if (!ctMapModal) { ctMapModal = new bootstrap.Modal(document.getElementById('ctMapModal')); }
       ctMapModal.show();
       setTimeout(function () {
-        ctBuildMap(); ctMap.invalidateSize();
+        if (ctBuildMap() === false || !ctMap) { return; }
+        ctMap.invalidateSize();
         if (lat != null && lng != null && !isNaN(lat) && !isNaN(lng)) { ctSetMarker(lat, lng, escapeHtml(label || '')); }
         ctPollPosition();
         clearInterval(ctPoll); ctPoll = setInterval(ctPollPosition, 15000);
