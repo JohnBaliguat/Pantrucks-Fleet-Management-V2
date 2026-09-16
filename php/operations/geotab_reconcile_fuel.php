@@ -34,6 +34,10 @@ $kmPct   = defined('GEOTAB_KM_VARIANCE_PCT')   ? (float)GEOTAB_KM_VARIANCE_PCT  
 $diagFuel = defined('GEOTAB_DIAG_TOTAL_FUEL') ? GEOTAB_DIAG_TOTAL_FUEL : null;
 $diagOdo  = defined('GEOTAB_DIAG_ODOMETER')   ? GEOTAB_DIAG_ODOMETER   : null;
 
+// This batch makes several Geotab StatusData calls per ticket, so it can run
+// long over a wide lookback — give it room instead of hitting max_execution_time.
+@set_time_limit(600);
+
 /** ISO-8601 UTC 'Z' string from a DB timestamp (assumed UTC). */
 function pt_fuel_iso(string $ts): ?string {
     try { return (new DateTime($ts, new DateTimeZone('UTC')))->format('Y-m-d\TH:i:s\Z'); }
@@ -105,8 +109,10 @@ try {
         $start = $prevByUnit[$unit] ?? null;
         $prevByUnit[$unit] = $end;   // advance for the next ticket of this unit
 
-        $ticketL = is_numeric($t['f_noOfLit']) ? (float)$t['f_noOfLit'] : null;
-        $ticketK = is_numeric($t['f_kmRun'])   ? (float)$t['f_kmRun']   : null;
+        // Postgres lowercases unquoted identifiers, so the result keys are
+        // f_nooflit / f_kmrun (not the camel-case in the SELECT).
+        $ticketL = is_numeric($t['f_nooflit'] ?? null) ? (float)$t['f_nooflit'] : null;
+        $ticketK = is_numeric($t['f_kmrun']   ?? null) ? (float)$t['f_kmrun']   : null;
 
         $deviceId = $deviceMap[$unit] ?? '';
         $geoL = null; $geoK = null; $flag = 'no_data';
