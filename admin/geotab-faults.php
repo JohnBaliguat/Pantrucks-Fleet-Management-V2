@@ -46,7 +46,10 @@ if (isset($_SESSION['user_type']) && $_SESSION['user_type'] === "Admin") {
                         <h4 class="card-title">Active Engine Faults</h4>
                         <p class="card-subtitle">Fault codes reported by Geotab. Dismiss to acknowledge, or block the unit for maintenance.</p>
                       </div>
-                      <div class="ms-auto mt-3 mt-md-0">
+                      <div class="ms-auto mt-3 mt-md-0 d-flex gap-2">
+                        <button id="dismissSelBtn" class="btn btn-success btn-sm" disabled>
+                          <i class="ti ti-check"></i> Dismiss selected (<span id="selCount">0</span>)
+                        </button>
                         <a href="blocked-units" class="btn btn-outline-danger btn-sm"><i class="ti ti-tool"></i> Maintenance</a>
                       </div>
                     </div>
@@ -55,6 +58,7 @@ if (isset($_SESSION['user_type']) && $_SESSION['user_type'] === "Admin") {
                       <table class="table text-nowrap align-middle fs-3 mb-0">
                         <thead>
                           <tr>
+                            <th class="text-muted" style="width:34px"><input type="checkbox" class="form-check-input" id="selAll"></th>
                             <th class="text-muted">Truck</th>
                             <th class="text-muted">Code</th>
                             <th class="text-muted">Description</th>
@@ -64,7 +68,7 @@ if (isset($_SESSION['user_type']) && $_SESSION['user_type'] === "Admin") {
                           </tr>
                         </thead>
                         <tbody id="faultRows">
-                          <tr><td colspan="6" class="text-center text-muted py-5">Loading…</td></tr>
+                          <tr><td colspan="7" class="text-center text-muted py-5">Loading…</td></tr>
                         </tbody>
                       </table>
                     </div>
@@ -115,13 +119,16 @@ if (isset($_SESSION['user_type']) && $_SESSION['user_type'] === "Admin") {
 
       function renderFaults(faults) {
         const $tb = $('#faultRows').empty();
+        $('#selAll').prop('checked', false);
         if (!faults.length) {
-          $tb.append('<tr><td colspan="6" class="text-center text-success py-5"><i class="ti ti-circle-check"></i> No active faults.</td></tr>');
+          $tb.append('<tr><td colspan="7" class="text-center text-success py-5"><i class="ti ti-circle-check"></i> No active faults.</td></tr>');
+          refreshSel();
           return;
         }
         faults.forEach(f => {
           const $tr = $(`
-            <tr>
+            <tr data-fault="${esc(f.fault_id)}">
+              <td><input type="checkbox" class="form-check-input fault-check"></td>
               <td class="fw-bolder">${esc(f.unit_name) || '(unlinked)'}</td>
               <td><span class="badge bg-danger">${esc(f.code) || '—'}</span></td>
               <td style="white-space:normal">${esc(f.description) || esc(f.fault_state) || '—'}</td>
@@ -130,8 +137,40 @@ if (isset($_SESSION['user_type']) && $_SESSION['user_type'] === "Admin") {
               <td class="text-end"><button class="btn btn-outline-secondary btn-sm dismiss">Dismiss</button></td>
             </tr>`);
           $tr.find('.dismiss').on('click', () => dismiss(f.fault_id, $tr));
+          $tr.find('.fault-check').on('change', refreshSel);
           $tb.append($tr);
         });
+        refreshSel();
+      }
+
+      function selectedFaultIds() {
+        return $('#faultRows tr[data-fault] .fault-check:checked')
+          .map(function () { return String($(this).closest('tr').data('fault')); }).get();
+      }
+
+      function refreshSel() {
+        const n = selectedFaultIds().length;
+        $('#selCount').text(n);
+        $('#dismissSelBtn').prop('disabled', n === 0);
+        const total = $('#faultRows tr[data-fault]').length;
+        $('#selAll').prop('checked', total > 0 && n === total);
+      }
+
+      function bulkDismiss() {
+        const ids = selectedFaultIds();
+        if (!ids.length) return;
+        $('#dismissSelBtn').prop('disabled', true);
+        $.post('php/crud/update/dismiss_geotab_faults_bulk.php', { fault_ids: JSON.stringify(ids) })
+          .done(res => {
+            if (res.status === 'success') {
+              Swal.fire({ icon: 'success', title: 'Dismissed', text: res.dismissed + ' fault' + (res.dismissed === 1 ? '' : 's') + ' dismissed.', timer: 1400, showConfirmButton: false });
+              load();
+            } else {
+              Swal.fire({ icon: 'error', title: 'Failed', text: res.message || 'Unknown error' });
+              refreshSel();
+            }
+          })
+          .fail(() => { Swal.fire({ icon: 'error', title: 'Failed' }); refreshSel(); });
       }
 
       function renderDiag(diag) {
@@ -173,6 +212,11 @@ if (isset($_SESSION['user_type']) && $_SESSION['user_type'] === "Admin") {
           })
           .fail(() => $('#statusBox').html('<div class="alert alert-danger">Could not load vehicle health.</div>'));
       }
+      $('#selAll').on('change', function () {
+        $('#faultRows tr[data-fault] .fault-check').prop('checked', $(this).is(':checked'));
+        refreshSel();
+      });
+      $('#dismissSelBtn').on('click', bulkDismiss);
       load();
       setInterval(() => { if (!document.hidden) load(); }, 60000);
     </script>
