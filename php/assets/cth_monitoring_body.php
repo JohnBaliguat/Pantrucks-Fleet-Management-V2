@@ -15,7 +15,11 @@ $dispatchHref = $role === 'admin' ? 'dispatchTiles' : 'dispatch-tiles';
   <link rel="shortcut icon" type="image/png" href="assets/images/logos/LogoFleet.png">
   <link rel="stylesheet" href="assets/css/styles.min.css">
   <link rel="stylesheet" href="assets/css/enhancements.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <script src="assets/libs/jquery/dist/jquery.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJ+eD9WeuwWU+wCzZ8x3wQjZB7tQ0=" crossorigin=""></script>
   <style>
     .cth-hero { background:linear-gradient(120deg,#0f172a,#1d4ed8); color:#fff; border-radius:14px; padding:22px 24px; }
     .cth-kpi { border:0; border-radius:12px; box-shadow:0 2px 10px rgba(15,23,42,.08); }
@@ -44,6 +48,17 @@ $dispatchHref = $role === 'admin' ? 'dispatchTiles' : 'dispatch-tiles';
                text-transform:uppercase; letter-spacing:.3px; margin-right:5px; vertical-align:middle; }
     .gps-src-live  { background:#cffafe; color:#155e75; }
     .gps-src-phone { background:#e5e7eb; color:#374151; }
+    /* Live-map overlay modal (this page has no Bootstrap JS). */
+    .ctm-overlay { position:fixed; inset:0; background:rgba(16,35,63,.55); z-index:2000; display:none; align-items:center; justify-content:center; padding:16px; }
+    .ctm-overlay.open { display:flex; }
+    .ctm-box { background:#fff; border-radius:16px; width:min(900px,96vw); box-shadow:0 24px 60px rgba(16,35,63,.35); overflow:hidden; }
+    .ctm-head { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #e6edf6; }
+    .ctm-head h5 { margin:0; font-size:1rem; color:#10233f; }
+    .ctm-close { border:0; background:transparent; font-size:1.4rem; line-height:1; color:#5f728f; cursor:pointer; }
+    #ctmMap { height:min(60vh,420px); width:100%; }
+    .ctm-meta { font-size:12px; color:#5f728f; padding:10px 16px; }
+    .btn-map { border:0; background:#e0f2fe; color:#075985; border-radius:8px; padding:2px 8px; font-size:11px; font-weight:700; cursor:pointer; margin-left:6px; }
+    .btn-map:hover { background:#bae6fd; }
     .empty-state { color:#64748b; padding:42px 20px; text-align:center; }
     @media (max-width: 767px) { .cth-hero { padding:18px; } .container-row .text-end { text-align:left !important; margin-top:7px; } }
   </style>
@@ -90,6 +105,18 @@ $dispatchHref = $role === 'admin' ? 'dispatchTiles' : 'dispatch-tiles';
       </div></div>
     </div></div></div>
   </div>
+
+  <!-- Live satellite map overlay -->
+  <div class="ctm-overlay" id="ctmOverlay">
+    <div class="ctm-box">
+      <div class="ctm-head">
+        <h5 id="ctmTitle">Live Location</h5>
+        <button type="button" class="ctm-close" id="ctmClose" aria-label="Close">&times;</button>
+      </div>
+      <div id="ctmMap"></div>
+      <div class="ctm-meta" id="ctmMeta"></div>
+    </div>
+  </div>
 <script>
 (() => {
   const feedUrl = 'php/fetch/active_containers.php';
@@ -134,7 +161,7 @@ $dispatchHref = $role === 'admin' ? 'dispatchTiles' : 'dispatch-tiles';
       const attention = group.some(isAttention), percent = Math.round(completed / group.length * 100);
       const shipmentLabel = String(group[0].booking_type || '').toLowerCase() === 'export' ? 'ATW' : 'Shipment';
       const route = group[0].trip_from || group[0].trip_to ? esc(group[0].trip_from || '—') + ' <i class="ti ti-arrow-right"></i> ' + esc(group[0].trip_to || '—') : 'Route not yet recorded';
-      const groupRows = group.map(r => { const info = stageInfo(r); const hasGps = r.last_lat != null && r.last_lng != null; let gpsSrc = ''; if (hasGps && r.pos_source === 'geotab') gpsSrc = '<span class="gps-src gps-src-live" title="Hardware GPS from the truck\'s Geotab device">Live</span>'; else if (hasGps && r.pos_source === 'phone') gpsSrc = '<span class="gps-src gps-src-phone" title="From the driver app on the phone">Phone</span>'; const location = hasGps ? (gpsSrc + 'GPS available') : 'No GPS'; return '<div class="container-row"><div class="row align-items-center g-1"><div class="col-md-3"><strong>' + esc(r.container || 'Container pending') + '</strong><div class="shipment-meta">' + esc(r.trip_receipt || 'No trip receipt') + '</div></div><div class="col-md-3"><span class="stage ' + info[1] + '">' + esc(info[0]) + '</span><div class="shipment-meta mt-1">' + esc(r.display_status || '') + '</div></div><div class="col-md-3"><strong>' + esc(r.truck || 'Truck pending') + '</strong><div class="shipment-meta">' + esc(r.driver_name || 'Driver pending') + '</div></div><div class="col-md-2"><span class="shipment-meta"><i class="ti ti-map-pin"></i> ' + location + '</span></div><div class="col-md-1 text-end"><a class="btn btn-sm btn-outline-primary" title="Open this container in tracking" href="' + trackingHref + '?q=' + encodeURIComponent(r.container || r.booking_sn || '') + '"><i class="ti ti-external-link"></i></a></div></div></div>'; }).join('');
+      const groupRows = group.map(r => { const info = stageInfo(r); const hasGps = r.last_lat != null && r.last_lng != null; let gpsSrc = ''; if (hasGps && r.pos_source === 'geotab') gpsSrc = '<span class="gps-src gps-src-live" title="Hardware GPS from the truck\'s Geotab device">Live</span>'; else if (hasGps && r.pos_source === 'phone') gpsSrc = '<span class="gps-src gps-src-phone" title="From the driver app on the phone">Phone</span>'; const mapBtn = hasGps ? ('<button type="button" class="btn-map ctm-open" data-did="' + r.d_id + '" data-lat="' + r.last_lat + '" data-lng="' + r.last_lng + '" data-label="' + esc((r.truck || '') + (r.container ? (' · ' + r.container) : '')) + '"><i class="ti ti-map-2"></i> Map</button>') : ''; const location = (hasGps ? (gpsSrc + 'GPS available') : 'No GPS') + mapBtn; return '<div class="container-row"><div class="row align-items-center g-1"><div class="col-md-3"><strong>' + esc(r.container || 'Container pending') + '</strong><div class="shipment-meta">' + esc(r.trip_receipt || 'No trip receipt') + '</div></div><div class="col-md-3"><span class="stage ' + info[1] + '">' + esc(info[0]) + '</span><div class="shipment-meta mt-1">' + esc(r.display_status || '') + '</div></div><div class="col-md-3"><strong>' + esc(r.truck || 'Truck pending') + '</strong><div class="shipment-meta">' + esc(r.driver_name || 'Driver pending') + '</div></div><div class="col-md-2"><span class="shipment-meta"><i class="ti ti-map-pin"></i> ' + location + '</span></div><div class="col-md-1 text-end"><a class="btn btn-sm btn-outline-primary" title="Open this container in tracking" href="' + trackingHref + '?q=' + encodeURIComponent(r.container || r.booking_sn || '') + '"><i class="ti ti-external-link"></i></a></div></div></div>'; }).join('');
       return '<section class="shipment-card ' + (attention ? 'attention' : '') + '"><div class="shipment-head"><div class="d-flex justify-content-between align-items-start gap-3 flex-wrap"><div><div class="shipment-sn"><i class="ti ti-package"></i> ' + shipmentLabel + ' ' + esc(sn) + '</div><div class="shipment-meta mt-1">' + route + ' · ' + group.length + ' container' + (group.length === 1 ? '' : 's') + '</div></div><div class="text-end"><a class="btn btn-sm btn-outline-secondary" href="' + trackingHref + '?q=' + encodeURIComponent(sn) + '">View shipment</a><div class="shipment-meta mt-2">' + completed + '/' + group.length + ' completed</div></div></div><div class="shipment-progress mt-3"><span style="width:' + percent + '%"></span></div></div>' + groupRows + '</section>';
     }).join('');
     $('#shipmentList').html(html);
@@ -148,6 +175,55 @@ $dispatchHref = $role === 'admin' ? 'dispatchTiles' : 'dispatch-tiles';
   $('#monitorTabs button').on('click', function(){ view = $(this).data('view'); $('#monitorTabs button').removeClass('active'); $(this).addClass('active'); quickFilter = 'all'; $('#quickFilters button').removeClass('btn-primary').addClass('btn-outline-secondary'); $('#quickFilters button[data-filter="all"]').removeClass('btn-outline-secondary').addClass('btn-primary'); load(); });
   $('#quickFilters button').on('click', function(){ quickFilter = $(this).data('filter'); $('#quickFilters button').removeClass('btn-primary').addClass('btn-outline-secondary'); $(this).removeClass('btn-outline-secondary').addClass('btn-primary'); render(); });
   $('#shipmentSearch').on('input', render); $('#refreshMonitor').on('click', load);
+
+  // ----- Live satellite map (Esri World Imagery via Leaflet) -----------
+  let ctmMap = null, ctmMarker = null, ctmPoll = null, ctmDid = null;
+  function ctmBuild() {
+    if (ctmMap) { ctmMap.invalidateSize(); return; }
+    ctmMap = L.map('ctmMap', { zoomControl: true });
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19, attribution: 'Tiles &copy; Esri — Maxar, Earthstar Geographics'
+    }).addTo(ctmMap);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+      maxZoom: 19, opacity: 0.9
+    }).addTo(ctmMap);
+    ctmMap.setView([12.8797, 121.7740], 6);
+  }
+  function ctmSet(lat, lng, label) {
+    if (lat == null || lng == null || isNaN(lat) || isNaN(lng)) return;
+    const ll = [lat, lng];
+    if (!ctmMarker) ctmMarker = L.marker(ll).addTo(ctmMap); else ctmMarker.setLatLng(ll);
+    ctmMarker.bindPopup(label);
+    ctmMap.setView(ll, Math.max(ctmMap.getZoom(), 15), { animate: true });
+  }
+  function ctmPollPos() {
+    if (!ctmDid) return;
+    $.getJSON('php/fetch/dispatch_live_position.php', { d_id: ctmDid }, res => {
+      if (res.status !== 'success') { $('#ctmMeta').text(res.message || 'Could not load position.'); return; }
+      if (!res.has_position) { $('#ctmMeta').html('<span class="text-muted">No live position yet for this trip.</span>'); return; }
+      const src = res.pos_source === 'geotab' ? 'Live (Geotab)' : 'Driver app';
+      ctmSet(res.lat, res.lng, esc(res.truck || '') + '<br>' + esc(res.location || '') + (res.speed != null ? '<br>' + Number(res.speed).toFixed(0) + ' km/h' : ''));
+      $('#ctmMeta').html('<b>' + src + '</b> · ' + esc(res.location || 'On the move') + ' · updated ' + esc(res.position_at || '') +
+        (res.pos_source === 'geotab' && !res.communicating ? ' · <span class="text-warning">device idle</span>' : ''));
+    }).fail(() => $('#ctmMeta').text('Could not reach the position feed.'));
+  }
+  function ctmClose() { $('#ctmOverlay').removeClass('open'); clearInterval(ctmPoll); ctmPoll = null; ctmDid = null; }
+  $('#shipmentList').on('click', '.ctm-open', function () {
+    ctmDid = $(this).data('did');
+    const lat = parseFloat($(this).data('lat')), lng = parseFloat($(this).data('lng'));
+    const label = String($(this).data('label') || '');
+    $('#ctmTitle').text(label || 'Live Location');
+    $('#ctmMeta').html('<span class="text-muted">Loading position…</span>');
+    $('#ctmOverlay').addClass('open');
+    setTimeout(() => {
+      ctmBuild(); ctmMap.invalidateSize();
+      if (!isNaN(lat) && !isNaN(lng)) ctmSet(lat, lng, esc(label));
+      ctmPollPos(); clearInterval(ctmPoll); ctmPoll = setInterval(ctmPollPos, 15000);
+    }, 200);
+  });
+  $('#ctmClose').on('click', ctmClose);
+  $('#ctmOverlay').on('click', e => { if (e.target.id === 'ctmOverlay') ctmClose(); });
+
   load(); setInterval(() => { if (!document.hidden) load(); }, 60000);
 })();
 </script>
