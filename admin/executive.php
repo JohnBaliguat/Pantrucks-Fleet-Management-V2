@@ -320,7 +320,11 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES); }
 
       function loadRoute(did) {
         fetch('php/fetch/dispatch_route.php?d_id=' + did).then(r => r.json()).then(res => {
-          if (res.status !== 'success' || !exMap || did !== exDid) return;
+          if (!exMap || did !== exDid) return;
+          if (res.status !== 'success') {
+            document.getElementById('exMapRoute').innerHTML = '<span style="color:#b45309">' + esc(res.message || 'Could not load route') + '</span>';
+            return;
+          }
           clearRoute();
           var layer = L.layerGroup().addTo(exMap); var b = [];
           if (res.route && res.route.length > 1) { L.polyline(res.route, { color: '#1f5eff', weight: 5, opacity: 0.85 }).addTo(layer); res.route.forEach(p => b.push(p)); }
@@ -335,13 +339,25 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES); }
       }
 
       function pollLive(did) {
-        fetch('php/fetch/dispatch_live_position.php?d_id=' + did).then(r => r.json()).then(res => {
-          if (res.status !== 'success' || did !== exDid) return;
-          if (!res.has_position) { clearMarker(); document.getElementById('exMapLive').innerHTML = '<span>No live position yet for this trip.</span>'; return; }
+        var live = document.getElementById('exMapLive');
+        fetch('php/fetch/dispatch_live_position.php?d_id=' + did).then(function (r) {
+          return r.json().then(function (res) { return { ok: r.ok, res: res }; })
+            .catch(function () { return { ok: r.ok, res: { status: 'error', message: 'HTTP ' + r.status } }; });
+        }).then(function (o) {
+          if (did !== exDid) return;
+          var res = o.res || {};
+          if (res.status !== 'success') {
+            // Surface the reason instead of leaving "Loading position…" forever.
+            live.innerHTML = '<span style="color:#b45309">' + esc(res.message || 'Could not load position') + '</span>';
+            return;
+          }
+          if (!res.has_position) { clearMarker(); live.innerHTML = '<span>No live position yet for this trip.</span>'; return; }
           var src = res.pos_source === 'geotab' ? 'Live (Geotab)' : 'Driver app';
           setMarker(res.lat, res.lng, esc(res.truck || '') + '<br>' + esc(res.location || ''));
-          document.getElementById('exMapLive').innerHTML = '<b>' + src + '</b> · ' + esc(res.location || 'On the move') + ' · updated ' + esc(res.position_at || '');
-        }).catch(() => {});
+          live.innerHTML = '<b>' + src + '</b> · ' + esc(res.location || 'On the move') + ' · updated ' + esc(res.position_at || '');
+        }).catch(function () {
+          if (did === exDid) live.innerHTML = '<span style="color:#b45309">Could not reach the position feed.</span>';
+        });
       }
 
       function open(did, title) {
