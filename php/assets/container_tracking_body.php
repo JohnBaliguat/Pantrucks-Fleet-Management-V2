@@ -42,10 +42,14 @@ while ($gres && ($gr = ($gres)->fetch())) { $gensetNames[] = $gr['unit_name']; }
   <link rel="stylesheet" href="assets/css/styles.min.css" />
   <link rel="stylesheet" href="assets/css/enhancements.css" />
   <link rel="stylesheet" href="alert/node_modules/sweetalert2/dist/sweetalert2.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
   <script src="assets/libs/jquery/dist/jquery.min.js"></script>
   <script src="assets/libs/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
   <script src="alert/node_modules/sweetalert2/dist/sweetalert2.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJ+eD9WeuwWU+wCzZ8x3wQjZB7tQ0=" crossorigin=""></script>
   <!-- Google Maps JS API — used for reverse-geocoding the Last GPS column. -->
   <script src="https://maps.googleapis.com/maps/api/js?key=<?php echo urlencode(MAPS_API_KEY); ?>" async defer></script>
   <style>
@@ -417,8 +421,90 @@ while ($gres && ($gr = ($gres)->fetch())) { $gensetNames[] = $gr['unit_name']; }
     </div>
   </div>
 
+  <!-- Live satellite map modal -->
+  <div class="modal fade" id="ctMapModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title mb-0" id="ctMapTitle">Live Location</h5>
+            <div class="text-muted small">Satellite position from Geotab (falls back to the driver app).</div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="ctMap" style="height:360px;width:100%;border-radius:12px;border:1px solid #dce8f8;"></div>
+          <div class="mt-2" style="font-size:12px;color:#5f728f" id="ctMapMeta"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     function escapeHtml(s) { return $('<div>').text(s == null ? '' : s).html(); }
+
+    // ----- Live satellite map (Esri World Imagery via Leaflet) -----------
+    var ctMap = null, ctMarker = null, ctPoll = null, ctDid = null, ctMapModal = null;
+
+    function ctBuildMap() {
+      if (ctMap) { ctMap.invalidateSize(); return; }
+      ctMap = L.map('ctMap', { zoomControl: true });
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19, attribution: 'Tiles &copy; Esri — Maxar, Earthstar Geographics'
+      }).addTo(ctMap);
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 19, opacity: 0.9
+      }).addTo(ctMap);
+      ctMap.setView([12.8797, 121.7740], 6);
+    }
+
+    function ctSetMarker(lat, lng, label) {
+      if (lat == null || lng == null || isNaN(lat) || isNaN(lng)) return;
+      var ll = [lat, lng];
+      if (!ctMarker) { ctMarker = L.marker(ll).addTo(ctMap); }
+      else { ctMarker.setLatLng(ll); }
+      ctMarker.bindPopup(label);
+      ctMap.setView(ll, Math.max(ctMap.getZoom(), 15), { animate: true });
+    }
+
+    function ctPollPosition() {
+      if (!ctDid) return;
+      $.getJSON('php/fetch/dispatch_live_position.php', { d_id: ctDid }, function (res) {
+        if (res.status !== 'success') { $('#ctMapMeta').text(res.message || 'Could not load position.'); return; }
+        if (!res.has_position) { $('#ctMapMeta').html('<span class="text-muted">No live position yet for this trip.</span>'); return; }
+        var src = res.pos_source === 'geotab' ? 'Live (Geotab)' : 'Driver app';
+        ctSetMarker(res.lat, res.lng,
+          escapeHtml(res.truck || '') + '<br>' + escapeHtml(res.location || '') +
+          (res.speed != null ? '<br>' + Number(res.speed).toFixed(0) + ' km/h' : ''));
+        $('#ctMapMeta').html('<b>' + src + '</b> · ' + escapeHtml(res.location || 'On the move') +
+          ' · updated ' + escapeHtml(res.position_at || '') +
+          (res.pos_source === 'geotab' && !res.communicating ? ' · <span class="text-warning">device idle</span>' : ''));
+      }).fail(function () { $('#ctMapMeta').text('Could not reach the position feed.'); });
+    }
+
+    function ctOpenMap(did, lat, lng, label) {
+      ctDid = did;
+      $('#ctMapTitle').text(label || 'Live Location');
+      $('#ctMapMeta').html('<span class="text-muted">Loading position…</span>');
+      if (!ctMapModal) { ctMapModal = new bootstrap.Modal(document.getElementById('ctMapModal')); }
+      ctMapModal.show();
+      setTimeout(function () {
+        ctBuildMap(); ctMap.invalidateSize();
+        if (lat != null && lng != null && !isNaN(lat) && !isNaN(lng)) { ctSetMarker(lat, lng, escapeHtml(label || '')); }
+        ctPollPosition();
+        clearInterval(ctPoll); ctPoll = setInterval(ctPollPosition, 15000);
+      }, 250);
+    }
+
+    $(document).on('click', '.ct-map-btn', function () {
+      var lat = parseFloat($(this).data('lat')), lng = parseFloat($(this).data('lng'));
+      ctOpenMap($(this).data('did'), isNaN(lat) ? null : lat, isNaN(lng) ? null : lng, $(this).data('label'));
+    });
+    document.addEventListener('DOMContentLoaded', function () {
+      var el = document.getElementById('ctMapModal');
+      el.addEventListener('shown.bs.modal', function () { if (ctMap) ctMap.invalidateSize(); });
+      el.addEventListener('hidden.bs.modal', function () { clearInterval(ctPoll); ctPoll = null; ctDid = null; });
+    });
     function normalizeContainerNo(value) {
       var upper = String(value || '').toUpperCase();
       var letters = '';
@@ -471,7 +557,12 @@ while ($gres && ($gr = ($gres)->fetch())) { $gensetNames[] = $gr['unit_name']; }
       } else if (r.pos_source === 'phone') {
         srcBadge = '<span class="gps-src gps-src-phone" title="From the driver app on the phone">Phone</span>';
       }
-      return '<span class="' + (stale ? 'gps-stale' : 'gps-fresh') + '">' + srcBadge + addrLine + link + '</span>';
+      // Live satellite-map button (opens a modal with an updating position).
+      var mapBtn = '<button type="button" class="btn btn-sm btn-link p-0 ms-1 ct-map-btn" ' +
+                   'data-did="' + r.d_id + '" data-lat="' + r.last_lat + '" data-lng="' + r.last_lng + '" ' +
+                   'data-label="' + escapeHtml((r.truck || '') + (r.container ? (' · ' + r.container) : '')) + '" ' +
+                   'title="Live map"><i class="ti ti-map-2"></i> Map</button>';
+      return '<span class="' + (stale ? 'gps-stale' : 'gps-fresh') + '">' + srcBadge + addrLine + link + mapBtn + '</span>';
     }
 
     // ----- Reverse-geocoding for the Last GPS column ----------------------
