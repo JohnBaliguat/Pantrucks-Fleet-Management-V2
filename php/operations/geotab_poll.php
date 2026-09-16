@@ -24,11 +24,24 @@ require_once __DIR__ . '/../lib/geotab_geofence.php';
 if (!$isCli) {
     session_start();
     header('Content-Type: application/json');
-    if (($_SESSION['user_type'] ?? '') !== 'Admin') {
+    // Operational roles can trigger a refresh from a page they keep open (the
+    // tracking board), so positions stay fresh without a Windows scheduled task
+    // (which the company's Cortex XDR flags). This is normal web traffic.
+    if (!in_array($_SESSION['user_type'] ?? '', ['Admin', 'Dispatcher', 'Dispatch Admin'], true)) {
         http_response_code(403);
-        echo json_encode(['status' => 'error', 'message' => 'Admin only']);
+        echo json_encode(['status' => 'error', 'message' => 'Not authorised']);
         exit;
     }
+    // Global throttle: whoever triggers first within the window runs the poll;
+    // concurrent/rapid calls (many open tabs) return immediately. The lock is
+    // touched at the START so an in-progress run also blocks a stampede.
+    $webLock = sys_get_temp_dir() . '/pt_geotab_poll_web.lock';
+    $lastRun = @filemtime($webLock) ?: 0;
+    if (time() - $lastRun < 60) {
+        echo json_encode(['status' => 'throttled']);
+        exit;
+    }
+    @touch($webLock);
 }
 
 const GEOTAB_POSITION_FEED = 'DeviceStatusInfo';

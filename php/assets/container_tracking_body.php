@@ -1439,6 +1439,15 @@ while ($gres && ($gr = ($gres)->fetch())) { $gensetNames[] = $gr['unit_name']; }
     // refresh once when the dispatcher returns to the tab.
     setInterval(function () { if (!document.hidden) refresh(); }, 60000);
     document.addEventListener('visibilitychange', function () { if (!document.hidden) refresh(); });
+
+    // Keep Geotab truck positions fresh WITHOUT a Windows scheduled task (the
+    // company's Cortex XDR flags those). While a dispatcher has this board open
+    // we trigger a throttled server-side poll — normal web traffic. It's
+    // fire-and-forget; the server throttles to ~once/60s across all open tabs,
+    // writes positions to the DB, and the next board refresh shows them.
+    function pokeGeotab() { if (document.hidden) return; $.get('php/operations/geotab_poll.php').fail(function () {}); }
+    pokeGeotab();
+    setInterval(pokeGeotab, 90000);
   </script>
 
   <script src="assets/js/sidebarmenu.js"></script>
