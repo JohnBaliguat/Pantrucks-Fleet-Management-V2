@@ -56,12 +56,11 @@ try {
          ON CONFLICT (feed_name) DO NOTHING"
     )->execute([GEOTAB_POSITION_FEED]);
 
-    $st = $conn->prepare("SELECT last_version FROM geotab_feed_state WHERE feed_name = ?");
-    $st->execute([GEOTAB_POSITION_FEED]);
-    $fromVersion = $st->fetchColumn();
-    $fromVersion = ($fromVersion === false) ? null : (string)$fromVersion;
-
-    $feed = pt_geotab_get_feed(GEOTAB_POSITION_FEED, $fromVersion);
+    // Current status of EVERY device via a plain Get (not GetFeed). This always
+    // returns each device's latest position — including parked trucks that
+    // aren't emitting new feed records — so linked units always have a fresh
+    // fix. Cheap for a fleet of this size.
+    $statuses = pt_geotab_get('DeviceStatusInfo', [], 10000);
 
     $update = $conn->prepare(
         "UPDATE units
@@ -79,7 +78,7 @@ try {
     $touched = [];
 
     $conn->beginTransaction();
-    foreach ($feed['data'] as $rec) {
+    foreach ($statuses as $rec) {
         $seen++;
         $deviceId = $rec['device']['id'] ?? null;
         if (!$deviceId) {
@@ -146,12 +145,12 @@ try {
         }
     }
 
-    // Persist the new cursor + health.
+    // Health heartbeat (positions come from a full Get, so there's no cursor).
     $conn->prepare(
         "UPDATE geotab_feed_state
-            SET last_version = ?, last_run_at = NOW(), last_error = NULL
+            SET last_run_at = NOW(), last_error = NULL
           WHERE feed_name = ?"
-    )->execute([$feed['toVersion'], GEOTAB_POSITION_FEED]);
+    )->execute([GEOTAB_POSITION_FEED]);
 
     $elapsed = round(microtime(true) - $startedAt, 2);
     $summary = "seen=$seen updated=$updated zone_events=$zoneEvents elapsed={$elapsed}s";
