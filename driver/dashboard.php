@@ -1167,6 +1167,26 @@ $latestStage = $latestRow['stage'] ?? '';
         //   No   → submit delivered immediately with skip_jackup=1.
         //   Esc  → do nothing.
         const askJackup = function (eventTime) {
+          const goJackup = function () {
+            let url = 'driver-jackup?d_id=' + encodeURIComponent(id) + '&auto_deliver=1';
+            if (eventTime) url += '&event_time=' + encodeURIComponent(eventTime);
+            location.href = url;
+          };
+          const markDelivered = function () {
+            const extra = { skip_jackup: '1' };
+            if (eventTime) extra.event_time = eventTime;
+            runDriverStatusFromButton($btn, id, st, extra);
+          };
+          // Fallback so the driver is NEVER stuck on Delivered if SweetAlert
+          // didn't load (offline PWA cache, or the asset failed to fetch).
+          if (typeof Swal === 'undefined') {
+            if (window.confirm('Jackup the trailer for this delivery?\n\nOK = jackup first · Cancel = mark delivered now')) {
+              goJackup();
+            } else {
+              markDelivered();
+            }
+            return;
+          }
           Swal.fire({
             title: 'Jackup trailer?',
             text: 'Do you want to jackup the trailer for this delivery?',
@@ -1179,13 +1199,9 @@ $latestStage = $latestRow['stage'] ?? '';
             cancelButtonColor: '#6c757d',
           }).then(function (r) {
             if (r.isConfirmed) {
-              let url = 'driver-jackup?d_id=' + encodeURIComponent(id) + '&auto_deliver=1';
-              if (eventTime) url += '&event_time=' + encodeURIComponent(eventTime);
-              location.href = url;
+              goJackup();
             } else if (r.dismiss === Swal.DismissReason.cancel) {
-              const extra = { skip_jackup: '1' };
-              if (eventTime) extra.event_time = eventTime;
-              runDriverStatusFromButton($btn, id, st, extra);
+              markDelivered();
             }
           });
         };
