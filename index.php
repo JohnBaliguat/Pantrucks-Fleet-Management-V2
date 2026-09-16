@@ -43,6 +43,7 @@ $routes = [
     'geotab-zones' => 'admin/geotab-zones.php',
     'geotab-faults' => 'admin/geotab-faults.php',
     'fuel-reconciliation' => 'admin/fuel-reconciliation.php',
+    'geotab-behavior' => 'admin/geotab-behavior.php',
     'unitProfile' => 'admin/addunit-page.php',
     'unitEditProfile' => 'admin/updateunit-page.php',
     'containerMonitoring' => 'admin/container_monitoring.php',
