@@ -49,7 +49,10 @@ if (isset($_SESSION['user_type']) && $_SESSION['user_type'] === "Admin") {
                           Trucks entering an active zone are logged and their location is updated automatically.
                         </p>
                       </div>
-                      <div class="ms-auto mt-3 mt-md-0">
+                      <div class="ms-auto mt-3 mt-md-0 d-flex gap-2">
+                        <button id="saveAllBtn" class="btn btn-success btn-sm" disabled>
+                          <i class="ti ti-device-floppy"></i> Save all changes (<span id="changeCount">0</span>)
+                        </button>
                         <button id="syncBtn" class="btn btn-outline-secondary btn-sm">
                           <i class="ti ti-cloud-download"></i> Sync from Geotab
                         </button>
@@ -108,8 +111,9 @@ if (isset($_SESSION['user_type']) && $_SESSION['user_type'] === "Admin") {
           return;
         }
         zones.forEach(z => {
+          const initActive = z.active ? '1' : '0';
           const $tr = $(`
-            <tr data-zone="${esc(z.zone_id)}">
+            <tr data-zone="${esc(z.zone_id)}" data-init-kind="${esc(z.kind)}" data-init-active="${initActive}">
               <td><h6 class="mb-0 fw-bolder">${esc(z.name) || '(unnamed)'}</h6>
                   <span class="text-muted">synced ${z.synced_at ? esc(z.synced_at) : '—'}</span></td>
               <td>${z.vertices}</td>
@@ -119,8 +123,60 @@ if (isset($_SESSION['user_type']) && $_SESSION['user_type'] === "Admin") {
               <td class="text-end"><button class="btn btn-primary btn-sm save-zone">Save</button></td>
             </tr>`);
           $tr.find('.save-zone').on('click', () => saveZone(z.zone_id, $tr));
+          $tr.find('.kind-select, .active-toggle').on('change', refreshChangeState);
           $tb.append($tr);
         });
+        refreshChangeState();
+      }
+
+      // Rows whose kind or active flag differs from the saved state.
+      function changedZones() {
+        const out = [];
+        $('#zoneRows tr[data-zone]').each(function () {
+          const $tr = $(this);
+          const kind = $tr.find('.kind-select').val();
+          const active = $tr.find('.active-toggle').is(':checked') ? '1' : '0';
+          if (kind !== $tr.data('init-kind') || active !== String($tr.data('init-active'))) {
+            out.push({ zone_id: String($tr.data('zone')), kind, active });
+          }
+        });
+        return out;
+      }
+
+      function refreshChangeState() {
+        const changed = changedZones();
+        const ids = new Set(changed.map(c => c.zone_id));
+        $('#changeCount').text(changed.length);
+        $('#saveAllBtn').prop('disabled', changed.length === 0);
+        $('#zoneRows tr[data-zone]').each(function () {
+          $(this).toggleClass('table-warning', ids.has(String($(this).data('zone'))));
+        });
+      }
+
+      function saveAll() {
+        const payload = changedZones();
+        if (!payload.length) return;
+        $('#saveAllBtn').prop('disabled', true);
+        $.post('php/crud/update/update_geotab_zones_bulk.php', { zones: JSON.stringify(payload) })
+          .done(res => {
+            if (res.status === 'success') {
+              let html = 'Updated ' + res.saved + ' zone' + (res.saved === 1 ? '' : 's') + '.';
+              if (res.skipped && res.skipped.length) {
+                html += '<br><br><b>Skipped:</b><br>' + res.skipped.map(esc).join('<br>');
+              }
+              Swal.fire({ icon: res.skipped && res.skipped.length ? 'warning' : 'success', title: 'Saved', html, timer: res.skipped && res.skipped.length ? undefined : 1400, showConfirmButton: !!(res.skipped && res.skipped.length) });
+              load();
+            } else {
+              Swal.fire({ icon: 'error', title: 'Failed', text: res.message || 'Unknown error' });
+              refreshChangeState();
+            }
+          })
+          .fail(xhr => {
+            let msg = 'Request failed';
+            try { msg = JSON.parse(xhr.responseText).message || msg; } catch (e) {}
+            Swal.fire({ icon: 'error', title: 'Failed', text: msg });
+            refreshChangeState();
+          });
       }
 
       function saveZone(zoneId, $tr) {
@@ -173,7 +229,7 @@ if (isset($_SESSION['user_type']) && $_SESSION['user_type'] === "Admin") {
             }
           })
           .fail(xhr => {
-            let msg = 'Sync failed. Check php/config/geotab.php credentials.';
+            let msg = 'Sync failed. Check the connection on the Geotab Connection page.';
             try { msg = JSON.parse(xhr.responseText).message || msg; } catch (e) {}
             $('#statusBox').html('<div class="alert alert-danger">' + esc(msg) + '</div>');
           })
@@ -181,6 +237,7 @@ if (isset($_SESSION['user_type']) && $_SESSION['user_type'] === "Admin") {
       }
 
       $('#syncBtn').on('click', sync);
+      $('#saveAllBtn').on('click', saveAll);
       load();
     </script>
   </body>
