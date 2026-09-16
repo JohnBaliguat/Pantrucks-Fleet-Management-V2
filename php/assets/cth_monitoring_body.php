@@ -112,6 +112,7 @@ $dispatchHref = $role === 'admin' ? 'dispatchTiles' : 'dispatch-tiles';
         <button type="button" class="ctm-close" id="ctmClose" aria-label="Close">&times;</button>
       </div>
       <div id="ctmMap"></div>
+      <div class="ctm-meta" id="ctmRouteMeta" style="font-size:13px"></div>
       <div class="ctm-meta" id="ctmMeta"></div>
     </div>
   </div>
@@ -175,7 +176,7 @@ $dispatchHref = $role === 'admin' ? 'dispatchTiles' : 'dispatch-tiles';
   $('#shipmentSearch').on('input', render); $('#refreshMonitor').on('click', load);
 
   // ----- Live satellite map (Esri World Imagery via Leaflet) -----------
-  let ctmMap = null, ctmMarker = null, ctmPoll = null, ctmDid = null;
+  let ctmMap = null, ctmMarker = null, ctmPoll = null, ctmDid = null, ctmRouteLayer = null;
   function ctmBuild() {
     if (typeof L === 'undefined') {
       $('#ctmMeta').html('<span class="text-danger">Map library could not load (no internet or blocked).</span>');
@@ -196,7 +197,29 @@ $dispatchHref = $role === 'admin' ? 'dispatchTiles' : 'dispatch-tiles';
     const ll = [lat, lng];
     if (!ctmMarker) ctmMarker = L.marker(ll).addTo(ctmMap); else ctmMarker.setLatLng(ll);
     ctmMarker.bindPopup(label);
-    ctmMap.setView(ll, Math.max(ctmMap.getZoom(), 15), { animate: true });
+    // When a route is shown, keep the whole trip framed; otherwise centre on truck.
+    if (!ctmRouteLayer) ctmMap.setView(ll, Math.max(ctmMap.getZoom(), 15), { animate: true });
+  }
+  function ctmClearRoute() { if (ctmRouteLayer && ctmMap) { ctmMap.removeLayer(ctmRouteLayer); ctmRouteLayer = null; } }
+
+  // Draw the trip's origin, destination, and road route once per open.
+  function ctmLoadRoute(did) {
+    $.getJSON('php/fetch/dispatch_route.php', { d_id: did }, res => {
+      if (did !== ctmDid || res.status !== 'success' || !ctmMap) return;
+      ctmClearRoute();
+      const layer = L.layerGroup().addTo(ctmMap);
+      const bounds = [];
+      if (res.route && res.route.length > 1) { L.polyline(res.route, { color: '#2563eb', weight: 4, opacity: 0.85 }).addTo(layer); res.route.forEach(p => bounds.push(p)); }
+      if (res.origin) { L.circleMarker([res.origin.lat, res.origin.lng], { radius: 7, color: '#059669', fillColor: '#10b981', fillOpacity: 1 }).bindPopup('Origin: ' + esc(res.origin.name)).addTo(layer); bounds.push([res.origin.lat, res.origin.lng]); }
+      if (res.destination) { L.circleMarker([res.destination.lat, res.destination.lng], { radius: 8, color: '#b91c1c', fillColor: '#ef4444', fillOpacity: 1 }).bindPopup((res.arrived ? '✓ Arrived · ' : 'Destination: ') + esc(res.destination.name)).addTo(layer); bounds.push([res.destination.lat, res.destination.lng]); }
+      ctmRouteLayer = layer;
+      if (bounds.length > 1) { try { ctmMap.fitBounds(bounds, { padding: [30, 30] }); } catch (e) {} }
+      if (res.destination) {
+        $('#ctmRouteMeta').html(res.arrived
+          ? '<span style="color:#16a34a;font-weight:700">✓ Arrived at ' + esc(res.destination.name) + '</span>'
+          : '<span style="color:#5f728f">En route to ' + esc(res.destination.name) + '</span>');
+      } else { $('#ctmRouteMeta').html('<span class="text-muted">No mapped origin/destination for this trip.</span>'); }
+    });
   }
   function ctmClearMarker() { if (ctmMarker && ctmMap) { ctmMap.removeLayer(ctmMarker); ctmMarker = null; } }
 
@@ -213,20 +236,24 @@ $dispatchHref = $role === 'admin' ? 'dispatchTiles' : 'dispatch-tiles';
         (res.pos_source === 'geotab' && !res.communicating ? ' · <span class="text-warning">device idle</span>' : ''));
     }).fail(() => $('#ctmMeta').text('Could not reach the position feed.'));
   }
-  function ctmClose() { $('#ctmOverlay').removeClass('open'); clearInterval(ctmPoll); ctmPoll = null; ctmDid = null; }
+  function ctmClose() { $('#ctmOverlay').removeClass('open'); clearInterval(ctmPoll); ctmPoll = null; ctmDid = null; ctmClearRoute(); }
   $('#shipmentList').on('click', '.ctm-open', function () {
     ctmDid = $(this).data('did');
     clearInterval(ctmPoll);
     ctmClearMarker();              // drop the previous trip's marker
+    ctmClearRoute();               // and its route
     const lat = parseFloat($(this).data('lat')), lng = parseFloat($(this).data('lng'));
     const label = String($(this).data('label') || '');
     $('#ctmTitle').text(label || 'Live Location');
+    $('#ctmRouteMeta').empty();
     $('#ctmMeta').html('<span class="text-muted">Loading position…</span>');
     $('#ctmOverlay').addClass('open');
+    const did = ctmDid;
     setTimeout(() => {
       if (ctmBuild() === false || !ctmMap) { return; }
       ctmMap.invalidateSize();
       if (!isNaN(lat) && !isNaN(lng)) ctmSet(lat, lng, esc(label));
+      ctmLoadRoute(did);
       ctmPollPos(); clearInterval(ctmPoll); ctmPoll = setInterval(ctmPollPos, 15000);
     }, 200);
   });
