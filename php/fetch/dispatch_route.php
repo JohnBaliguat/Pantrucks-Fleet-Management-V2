@@ -13,7 +13,7 @@ header('Content-Type: application/json');
 require_once __DIR__ . '/../config/config.php';
 
 $role = $_SESSION['user_type'] ?? '';
-if (!in_array($role, ['Dispatcher', 'Dispatch Admin', 'Booker', 'Admin', 'Visual'], true)) {
+if (!in_array($role, ['Dispatcher', 'Dispatch Admin', 'Booker', 'Admin', 'Visual', 'Driver'], true)) {
     http_response_code(401);
     echo json_encode(['status' => 'error', 'message' => 'Not authorised']);
     exit;
@@ -38,7 +38,7 @@ try {
     $st = $conn->prepare(
         "SELECT COALESCE(t.trip_from, b.trip_from) AS trip_from,
                 COALESCE(t.trip_to,   b.trip_to)   AS trip_to,
-                d.d_truck,
+                d.d_truck, d.driver_id AS dispatch_driver_id,
                 COALESCE(u.last_lat, drv.last_lat) AS cur_lat,
                 COALESCE(u.last_lng, drv.last_lng) AS cur_lng,
                 CASE WHEN u.last_position_at IS NOT NULL THEN 'geotab' ELSE 'phone' END AS pos_source,
@@ -58,6 +58,12 @@ try {
     if (!$r) {
         http_response_code(404);
         echo json_encode(['status' => 'error', 'message' => 'Dispatch not found']);
+        exit;
+    }
+    // A driver may only see the route for their own dispatch.
+    if ($role === 'Driver' && (int)$r['dispatch_driver_id'] !== (int)($_SESSION['user_id'] ?? 0)) {
+        http_response_code(403);
+        echo json_encode(['status' => 'error', 'message' => 'Not your dispatch']);
         exit;
     }
 
