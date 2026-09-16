@@ -48,7 +48,10 @@ if (isset($_SESSION['user_type']) && $_SESSION['user_type'] === "Admin") {
                           Link each Geotab GO device to a truck. The device's VIN is captured on link.
                         </p>
                       </div>
-                      <div class="ms-auto mt-3 mt-md-0">
+                      <div class="ms-auto mt-3 mt-md-0 d-flex gap-2">
+                        <button id="saveAllBtn" class="btn btn-success btn-sm" disabled>
+                          <i class="ti ti-device-floppy"></i> Save all changes (<span id="changeCount">0</span>)
+                        </button>
                         <button id="reloadBtn" class="btn btn-primary btn-sm">
                           <i class="ti ti-refresh"></i> Reload from Geotab
                         </button>
@@ -119,7 +122,11 @@ if (isset($_SESSION['user_type']) && $_SESSION['user_type'] === "Admin") {
           return;
         }
         devices.forEach(d => {
+          // Current selection defaults to the suggestion; the "initial" (saved)
+          // state is the actual linked unit only, so a suggested row counts as a
+          // pending change to be saved.
           const linkedUnitId = d.linked_unit ? d.linked_unit.unit_id : (d.suggested_unit_id || null);
+          const initial = d.linked_unit ? String(d.linked_unit.unit_id) : '';
           const isSuggestion = !d.linked_unit && d.suggested_unit_id;
           const badge = d.linked_unit
             ? '<span class="badge bg-success">Linked</span>'
@@ -130,14 +137,80 @@ if (isset($_SESSION['user_type']) && $_SESSION['user_type'] === "Admin") {
               <td>${esc(d.serial)}</td>
               <td>${esc(d.plate) || '<span class="text-muted">—</span>'}</td>
               <td>${esc(d.vin) || '<span class="text-muted">—</span>'}</td>
-              <td><select class="form-select form-select-sm unit-select" style="min-width:220px">${unitOptions(linkedUnitId, d.device_id)}</select></td>
+              <td><select class="form-select form-select-sm unit-select" data-initial="${esc(initial)}" style="min-width:220px">${unitOptions(linkedUnitId, d.device_id)}</select></td>
               <td class="text-end">
                 <button class="btn btn-primary btn-sm save-link">Save</button>
               </td>
             </tr>`);
           $tr.find('.save-link').on('click', () => saveLink(d.device_id, $tr));
+          $tr.find('.unit-select').on('change', refreshChangeState);
           $tb.append($tr);
         });
+        refreshChangeState();
+      }
+
+      // Rows whose selection differs from the saved state.
+      function changedRows() {
+        const out = [];
+        $('#deviceRows tr[data-device]').each(function () {
+          const $sel = $(this).find('.unit-select');
+          const cur = String($sel.val() || '');
+          const init = String($sel.data('initial') || '');
+          if (cur !== init) {
+            out.push({ device_id: String($(this).data('device')), cur, init });
+          }
+        });
+        return out;
+      }
+
+      function refreshChangeState() {
+        const n = changedRows().length;
+        $('#changeCount').text(n);
+        $('#saveAllBtn').prop('disabled', n === 0);
+        // Highlight changed rows.
+        $('#deviceRows tr[data-device]').each(function () {
+          const $sel = $(this).find('.unit-select');
+          const changed = String($sel.val() || '') !== String($sel.data('initial') || '');
+          $(this).toggleClass('table-warning', changed);
+        });
+      }
+
+      function saveAll() {
+        const rows = changedRows();
+        if (!rows.length) return;
+        // Build one payload entry per changed row:
+        //  - selected a truck (cur set)       -> link that unit to this device
+        //  - cleared to "not linked" (cur '') -> unlink the unit it was on (init)
+        const payload = [];
+        rows.forEach(r => {
+          if (r.cur !== '') {
+            payload.push({ unit_id: parseInt(r.cur, 10), device_id: r.device_id });
+          } else if (r.init !== '') {
+            payload.push({ unit_id: parseInt(r.init, 10), device_id: '' });
+          }
+        });
+        if (!payload.length) return;
+        $('#saveAllBtn').prop('disabled', true);
+        $.post('php/crud/update/link_geotab_devices_bulk.php', { links: JSON.stringify(payload) })
+          .done(res => {
+            if (res.status === 'success') {
+              let html = 'Linked ' + res.saved + (res.unlinked ? (', unlinked ' + res.unlinked) : '') + '.';
+              if (res.skipped && res.skipped.length) {
+                html += '<br><br><b>Skipped:</b><br>' + res.skipped.map(esc).join('<br>');
+              }
+              Swal.fire({ icon: res.skipped && res.skipped.length ? 'warning' : 'success', title: 'Saved', html });
+              load();
+            } else {
+              Swal.fire({ icon: 'error', title: 'Failed', text: res.message || 'Unknown error' });
+              refreshChangeState();
+            }
+          })
+          .fail(xhr => {
+            let msg = 'Request failed';
+            try { msg = JSON.parse(xhr.responseText).message || msg; } catch (e) {}
+            Swal.fire({ icon: 'error', title: 'Failed', text: msg });
+            refreshChangeState();
+          });
       }
 
       function saveLink(deviceId, $tr) {
@@ -176,7 +249,7 @@ if (isset($_SESSION['user_type']) && $_SESSION['user_type'] === "Admin") {
             render(res.devices || []);
           })
           .fail(xhr => {
-            let msg = 'Could not reach Geotab. Check php/config/geotab.php credentials.';
+            let msg = 'Could not reach Geotab. Check the connection on the Geotab Connection page.';
             try { msg = JSON.parse(xhr.responseText).message || msg; } catch (e) {}
             $('#statusBox').html('<div class="alert alert-danger">' + esc(msg) + '</div>');
             $('#deviceRows').empty();
@@ -184,6 +257,7 @@ if (isset($_SESSION['user_type']) && $_SESSION['user_type'] === "Admin") {
       }
 
       $('#reloadBtn').on('click', load);
+      $('#saveAllBtn').on('click', saveAll);
       load();
     </script>
   </body>
