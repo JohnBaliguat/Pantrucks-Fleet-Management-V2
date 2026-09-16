@@ -2,7 +2,7 @@
 // Offline-first POST queue: stores FormData entries (including file Blobs)
 // natively in IndexedDB and rebuilds them as multipart/form-data on replay.
 
-const CACHE_VERSION = 'pt-driver-v4';
+const CACHE_VERSION = 'pt-driver-v5';
 const APP_SHELL = [
   'driver-dashboard',
   'manifest.webmanifest',
@@ -106,7 +106,10 @@ self.addEventListener('install', (e) => {
     // button does nothing). allSettled keeps every asset that did fetch.
     caches.open(CACHE_VERSION).then(cache =>
       Promise.allSettled(APP_SHELL.map(url => cache.add(url)))
-    ).then(() => self.skipWaiting())
+    )
+    // NOTE: no self.skipWaiting() here — the new SW waits so the page can show
+    // an "Update available — tap to refresh" prompt and activate on the driver's
+    // tap (they message SKIP_WAITING). Avoids reloading mid-action.
   );
 });
 
@@ -264,6 +267,9 @@ self.addEventListener('message', (event) => {
     event.waitUntil(idbGetAll().then(items =>
       Promise.all(items.map(it => idbDelete(it.id)))
     ).then(() => notifyClientsQueueChanged()));
+  } else if (data.type === 'SKIP_WAITING') {
+    // The page's "Update available" prompt was tapped — activate the new SW now.
+    self.skipWaiting();
   }
 });
 
