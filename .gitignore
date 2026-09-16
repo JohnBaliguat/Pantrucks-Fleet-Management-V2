@@ -13,6 +13,7 @@ table-fetch/error_log.txt
 php/config/microsoft_sso.php
 php/config/vapid.php
 php/config/geotab.php
+php/config/geotab.config.php
 
 # IDE and OS
 .idea/

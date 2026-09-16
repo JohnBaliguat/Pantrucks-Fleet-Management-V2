@@ -366,6 +366,18 @@
                 </li>
                 <li class="sidebar-item">
                   <a class="sidebar-link justify-content-between"
+                    href="geotab-connection">
+                    <div class="d-flex align-items-center gap-3">
+                      <div class="round-16 d-flex align-items-center justify-content-center">
+                        <i class="ti ti-circle"></i>
+                      </div>
+                      <span class="hide-menu">Geotab Connection</span>
+                    </div>
+
+                  </a>
+                </li>
+                <li class="sidebar-item">
+                  <a class="sidebar-link justify-content-between"
                     href="geotab-devices">
                     <div class="d-flex align-items-center gap-3">
                       <div class="round-16 d-flex align-items-center justify-content-center">

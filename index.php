@@ -39,6 +39,7 @@ $routes = [
     'trailerReport' => 'admin/trailer-report.php',
     'truckReport' => 'admin/truck-report.php',
     'truck' => 'admin/truck.php',
+    'geotab-connection' => 'admin/geotab-connection.php',
     'geotab-devices' => 'admin/geotab-devices.php',
     'geotab-zones' => 'admin/geotab-zones.php',
     'geotab-faults' => 'admin/geotab-faults.php',

@@ -21,31 +21,104 @@
 // geotab.example.php.
 // =====================================================================
 
+// Load the legacy defines file (if present) so operators who set GEOTAB_* in
+// php/config/geotab.php keep working, then fill in safe fallback defaults for
+// the non-secret tuning constants so the pollers always have them — even when
+// the connection is configured purely through the admin UI store.
+(function () {
+    $file = __DIR__ . '/../config/geotab.php';
+    if (is_file($file)) { require_once $file; }
+})();
+if (!defined('GEOTAB_SERVER'))            define('GEOTAB_SERVER',            'my.geotab.com');
+if (!defined('GEOTAB_DIAG_ODOMETER'))     define('GEOTAB_DIAG_ODOMETER',     'DiagnosticOdometerAdjustmentId');
+if (!defined('GEOTAB_DIAG_ENGINE_HOURS')) define('GEOTAB_DIAG_ENGINE_HOURS', 'DiagnosticEngineHoursAdjustmentId');
+if (!defined('GEOTAB_DIAG_TOTAL_FUEL'))   define('GEOTAB_DIAG_TOTAL_FUEL',   'DiagnosticDeviceTotalFuelId');
+if (!defined('GEOTAB_FUEL_VARIANCE_PCT')) define('GEOTAB_FUEL_VARIANCE_PCT', 15);
+if (!defined('GEOTAB_KM_VARIANCE_PCT'))   define('GEOTAB_KM_VARIANCE_PCT',   15);
+
+if (!function_exists('pt_geotab_settings_path')) {
+    // UI-managed connection store: a PHP file that RETURNS an array, so it is
+    // executed (never served as text) and the password stays out of any
+    // web-readable file. Written by the admin "Geotab Connection" page.
+    function pt_geotab_settings_path(): string {
+        return __DIR__ . '/../config/geotab.config.php';
+    }
+}
+
+if (!function_exists('pt_geotab_load_settings')) {
+    /** Current UI store as an array, or null if not saved yet. */
+    function pt_geotab_load_settings(): ?array {
+        $p = pt_geotab_settings_path();
+        if (!is_file($p)) { return null; }
+        $cfg = @include $p;
+        return is_array($cfg) ? $cfg : null;
+    }
+}
+
+if (!function_exists('pt_geotab_save_settings')) {
+    /** Persist the UI store (var_export — plain strings, injection-safe). */
+    function pt_geotab_save_settings(array $cfg): bool {
+        $clean = [
+            'enabled'  => !empty($cfg['enabled']),
+            'server'   => trim((string)($cfg['server'] ?: 'my.geotab.com')),
+            'database' => trim((string)($cfg['database'] ?? '')),
+            'username' => trim((string)($cfg['username'] ?? '')),
+            'password' => (string)($cfg['password'] ?? ''),
+        ];
+        $php = "<?php\n// Geotab API credentials — managed via the admin Geotab Connection page.\n"
+             . "// Executed (never served as text); do not commit.\nreturn "
+             . var_export($clean, true) . ";\n";
+        $ok = @file_put_contents(pt_geotab_settings_path(), $php, LOCK_EX) !== false;
+        if ($ok) { @chmod(pt_geotab_settings_path(), 0600); }
+        return $ok;
+    }
+}
+
+if (!function_exists('pt_geotab_is_configured')) {
+    /** True when the connection is usable (UI store enabled+complete, or defines set). */
+    function pt_geotab_is_configured(): bool {
+        try { pt_geotab_config(); return true; }
+        catch (Throwable $e) { return false; }
+    }
+}
+
 if (!function_exists('pt_geotab_config')) {
     function pt_geotab_config(): array {
         static $cfg = null;
         if ($cfg !== null) {
             return $cfg;
         }
-        $file = __DIR__ . '/../config/geotab.php';
-        if (!is_file($file)) {
-            throw new RuntimeException(
-                'Geotab not configured: copy php/config/geotab.example.php to geotab.php and fill it in.'
-            );
+
+        // 1. UI store wins when enabled and complete.
+        $s = pt_geotab_load_settings();
+        if ($s && !empty($s['enabled'])
+            && !empty($s['server']) && !empty($s['database'])
+            && !empty($s['username']) && !empty($s['password'])) {
+            $cfg = [
+                'database' => (string)$s['database'],
+                'server'   => (string)$s['server'],
+                'user'     => (string)$s['username'],
+                'password' => (string)$s['password'],
+            ];
+            return $cfg;
         }
-        require_once $file;
-        foreach (['GEOTAB_DATABASE', 'GEOTAB_SERVER', 'GEOTAB_USER', 'GEOTAB_PASSWORD'] as $c) {
-            if (!defined($c) || constant($c) === '' || constant($c) === 'CHANGE_ME') {
-                throw new RuntimeException("Geotab config incomplete: $c is not set.");
-            }
+
+        // 2. Fall back to legacy defines in php/config/geotab.php.
+        if (defined('GEOTAB_DATABASE') && defined('GEOTAB_USER') && defined('GEOTAB_PASSWORD')
+            && GEOTAB_DATABASE !== '' && GEOTAB_DATABASE !== 'your_database_name'
+            && GEOTAB_PASSWORD !== '' && GEOTAB_PASSWORD !== 'CHANGE_ME') {
+            $cfg = [
+                'database' => GEOTAB_DATABASE,
+                'server'   => defined('GEOTAB_SERVER') ? GEOTAB_SERVER : 'my.geotab.com',
+                'user'     => GEOTAB_USER,
+                'password' => GEOTAB_PASSWORD,
+            ];
+            return $cfg;
         }
-        $cfg = [
-            'database' => GEOTAB_DATABASE,
-            'server'   => GEOTAB_SERVER,
-            'user'     => GEOTAB_USER,
-            'password' => GEOTAB_PASSWORD,
-        ];
-        return $cfg;
+
+        throw new RuntimeException(
+            'Geotab not configured: set the connection on the admin Geotab Connection page.'
+        );
     }
 }
 
