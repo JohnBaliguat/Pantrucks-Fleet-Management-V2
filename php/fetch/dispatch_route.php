@@ -62,7 +62,13 @@ try {
     }
 
     // Resolve origin/destination coordinates from the location table by name.
-    $locStmt = $conn->prepare("SELECT latitude, longitude FROM location WHERE location_name = ? LIMIT 1");
+    // Prefer a row that actually has numeric coordinates (there can be
+    // duplicate location rows for a name, some blank).
+    $locStmt = $conn->prepare(
+        "SELECT latitude, longitude FROM location
+          WHERE location_name = ? AND latitude ~ '^-?[0-9.]+$' AND longitude ~ '^-?[0-9.]+$'
+          LIMIT 1"
+    );
     $resolve = function (?string $name) use ($locStmt) {
         $name = trim((string)$name);
         if ($name === '') return null;

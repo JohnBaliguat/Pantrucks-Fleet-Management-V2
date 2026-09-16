@@ -45,6 +45,7 @@ $routes = [
     'geotab-faults' => 'admin/geotab-faults.php',
     'fuel-reconciliation' => 'admin/fuel-reconciliation.php',
     'geotab-behavior' => 'admin/geotab-behavior.php',
+    'location-coordinates' => 'admin/location-coordinates.php',
     'unitProfile' => 'admin/addunit-page.php',
     'unitEditProfile' => 'admin/updateunit-page.php',
     'containerMonitoring' => 'admin/container_monitoring.php',
