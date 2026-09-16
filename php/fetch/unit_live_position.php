@@ -38,7 +38,10 @@ try {
                   WHERE shift_truck = u.unit_name AND shift_ended_at IS NULL
                   ORDER BY shift_started_at DESC LIMIT 1),
                 NULLIF(u.driver_id, 0))
-          WHERE u.unit_name = ? LIMIT 1"
+          WHERE u.unit_name = ?
+          -- unit_name isn't unique; prefer the row that actually has a fix.
+          ORDER BY u.last_position_at DESC NULLS LAST
+          LIMIT 1"
     );
     $st->execute([$code]);
     $r = $st->fetch();

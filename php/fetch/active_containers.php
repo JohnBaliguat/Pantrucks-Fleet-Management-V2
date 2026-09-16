@@ -114,7 +114,13 @@ LEFT JOIN trips t
      )
 LEFT JOIN drivers drv ON drv.driver_id = d.driver_id
 -- The app keys trucks by unit_name; dispatch.d_truck holds that same name.
-LEFT JOIN units u ON u.unit_name = d.d_truck
+-- unit_name isn't unique (a few duplicate rows exist), so pick ONE row per
+-- name — the freshest-positioned — to avoid doubling tracking rows.
+LEFT JOIN (
+    SELECT DISTINCT ON (unit_name) unit_name, last_lat, last_lng, last_position_at
+    FROM units
+    ORDER BY unit_name, last_position_at DESC NULLS LAST
+) u ON u.unit_name = d.d_truck
 WHERE 1=1
 ";
 

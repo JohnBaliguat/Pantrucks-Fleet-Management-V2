@@ -34,7 +34,10 @@ try {
            FROM dispatch d
            LEFT JOIN units   u   ON u.unit_name  = d.d_truck
            LEFT JOIN drivers drv ON drv.driver_id = d.driver_id
-          WHERE d.d_id = ? LIMIT 1"
+          WHERE d.d_id = ?
+          -- unit_name isn't unique; prefer the row that actually has a fix.
+          ORDER BY u.last_position_at DESC NULLS LAST
+          LIMIT 1"
     );
     $st->execute([$dId]);
     $r = $st->fetch();
