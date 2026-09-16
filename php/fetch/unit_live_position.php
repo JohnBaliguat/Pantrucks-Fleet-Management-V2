@@ -1,7 +1,8 @@
 <?php
 // Live position of one unit (for the equipment-locations map modal).
-// Returns the latest Geotab-polled coordinates + context so the modal can
-// keep the marker updated while it's open.
+// Prefers the unit's Geotab fix (units.last_*); when the unit has no Geotab
+// device/fix, falls back to the phone GPS of the driver currently on shift
+// with this truck (else the unit's assigned driver).
 //
 //   GET code = unit_name
 
@@ -24,10 +25,20 @@ if ($code === '') {
 }
 
 try {
+    // Pick the phone-GPS driver: whoever is on shift with this truck, else the
+    // unit's assigned driver_id.
     $st = $conn->prepare(
-        "SELECT unit_name, current_location, last_lat, last_lng, last_speed, bearing,
-                last_position_at, is_communicating, geotab_device_id
-           FROM units WHERE unit_name = ? LIMIT 1"
+        "SELECT u.unit_name, u.current_location, u.geotab_device_id,
+                u.last_lat  AS u_lat, u.last_lng AS u_lng, u.last_speed, u.bearing,
+                u.last_position_at, u.is_communicating,
+                drv.last_lat AS d_lat, drv.last_lng AS d_lng, drv.last_seen_at AS d_seen
+           FROM units u
+           LEFT JOIN drivers drv ON drv.driver_id = COALESCE(
+                (SELECT driver_id FROM drivers
+                  WHERE shift_truck = u.unit_name AND shift_ended_at IS NULL
+                  ORDER BY shift_started_at DESC LIMIT 1),
+                NULLIF(u.driver_id, 0))
+          WHERE u.unit_name = ? LIMIT 1"
     );
     $st->execute([$code]);
     $r = $st->fetch();
@@ -37,8 +48,22 @@ try {
         exit;
     }
 
-    $lat = is_numeric($r['last_lat']) ? (float)$r['last_lat'] : null;
-    $lng = is_numeric($r['last_lng']) ? (float)$r['last_lng'] : null;
+    $uLat = is_numeric($r['u_lat']) ? (float)$r['u_lat'] : null;
+    $uLng = is_numeric($r['u_lng']) ? (float)$r['u_lng'] : null;
+    $dLat = is_numeric($r['d_lat']) ? (float)$r['d_lat'] : null;
+    $dLng = is_numeric($r['d_lng']) ? (float)$r['d_lng'] : null;
+
+    // Prefer Geotab (the truck itself); fall back to the driver's phone.
+    if ($uLat !== null && $uLng !== null) {
+        $lat = $uLat; $lng = $uLng; $src = 'geotab';
+        $posAt = $r['last_position_at'];
+    } elseif ($dLat !== null && $dLng !== null) {
+        $lat = $dLat; $lng = $dLng; $src = 'phone';
+        $posAt = $r['d_seen'];
+    } else {
+        $lat = null; $lng = null; $src = 'none';
+        $posAt = null;
+    }
 
     echo json_encode([
         'status'        => 'success',
@@ -46,9 +71,10 @@ try {
         'location'      => $r['current_location'],
         'lat'           => $lat,
         'lng'           => $lng,
-        'speed'         => is_numeric($r['last_speed']) ? (float)$r['last_speed'] : null,
-        'bearing'       => is_numeric($r['bearing']) ? (float)$r['bearing'] : null,
-        'position_at'   => $r['last_position_at'],
+        'pos_source'    => $src,
+        'speed'         => ($src === 'geotab' && is_numeric($r['last_speed'])) ? (float)$r['last_speed'] : null,
+        'bearing'       => ($src === 'geotab' && is_numeric($r['bearing'])) ? (float)$r['bearing'] : null,
+        'position_at'   => $posAt,
         'communicating' => (bool)$r['is_communicating'],
         'linked'        => !empty($r['geotab_device_id']),
         'has_position'  => ($lat !== null && $lng !== null),

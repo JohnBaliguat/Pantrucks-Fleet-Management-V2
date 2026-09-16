@@ -469,11 +469,15 @@ while ($gres && ($gr = ($gres)->fetch())) { $gensetNames[] = $gr['unit_name']; }
       ctMap.setView(ll, Math.max(ctMap.getZoom(), 15), { animate: true });
     }
 
+    function ctClearMarker() { if (ctMarker && ctMap) { ctMap.removeLayer(ctMarker); ctMarker = null; } }
+
     function ctPollPosition() {
       if (!ctDid) return;
-      $.getJSON('php/fetch/dispatch_live_position.php', { d_id: ctDid }, function (res) {
+      var requested = ctDid;
+      $.getJSON('php/fetch/dispatch_live_position.php', { d_id: requested }, function (res) {
+        if (requested !== ctDid) return; // switched trips before this returned
         if (res.status !== 'success') { $('#ctMapMeta').text(res.message || 'Could not load position.'); return; }
-        if (!res.has_position) { $('#ctMapMeta').html('<span class="text-muted">No live position yet for this trip.</span>'); return; }
+        if (!res.has_position) { ctClearMarker(); $('#ctMapMeta').html('<span class="text-muted">No live position yet for this trip.</span>'); return; }
         var src = res.pos_source === 'geotab' ? 'Live (Geotab)' : 'Driver app';
         ctSetMarker(res.lat, res.lng,
           escapeHtml(res.truck || '') + '<br>' + escapeHtml(res.location || '') +
@@ -486,6 +490,8 @@ while ($gres && ($gr = ($gres)->fetch())) { $gensetNames[] = $gr['unit_name']; }
 
     function ctOpenMap(did, lat, lng, label) {
       ctDid = did;
+      clearInterval(ctPoll);
+      ctClearMarker();               // drop the previous trip's marker
       $('#ctMapTitle').text(label || 'Live Location');
       $('#ctMapMeta').html('<span class="text-muted">Loading position…</span>');
       if (!ctMapModal) { ctMapModal = new bootstrap.Modal(document.getElementById('ctMapModal')); }

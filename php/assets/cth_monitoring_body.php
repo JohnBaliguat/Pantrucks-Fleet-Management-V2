@@ -198,11 +198,15 @@ $dispatchHref = $role === 'admin' ? 'dispatchTiles' : 'dispatch-tiles';
     ctmMarker.bindPopup(label);
     ctmMap.setView(ll, Math.max(ctmMap.getZoom(), 15), { animate: true });
   }
+  function ctmClearMarker() { if (ctmMarker && ctmMap) { ctmMap.removeLayer(ctmMarker); ctmMarker = null; } }
+
   function ctmPollPos() {
     if (!ctmDid) return;
-    $.getJSON('php/fetch/dispatch_live_position.php', { d_id: ctmDid }, res => {
+    const requested = ctmDid;
+    $.getJSON('php/fetch/dispatch_live_position.php', { d_id: requested }, res => {
+      if (requested !== ctmDid) return; // switched trips before this returned
       if (res.status !== 'success') { $('#ctmMeta').text(res.message || 'Could not load position.'); return; }
-      if (!res.has_position) { $('#ctmMeta').html('<span class="text-muted">No live position yet for this trip.</span>'); return; }
+      if (!res.has_position) { ctmClearMarker(); $('#ctmMeta').html('<span class="text-muted">No live position yet for this trip.</span>'); return; }
       const src = res.pos_source === 'geotab' ? 'Live (Geotab)' : 'Driver app';
       ctmSet(res.lat, res.lng, esc(res.truck || '') + '<br>' + esc(res.location || '') + (res.speed != null ? '<br>' + Number(res.speed).toFixed(0) + ' km/h' : ''));
       $('#ctmMeta').html('<b>' + src + '</b> · ' + esc(res.location || 'On the move') + ' · updated ' + esc(res.position_at || '') +
@@ -212,6 +216,8 @@ $dispatchHref = $role === 'admin' ? 'dispatchTiles' : 'dispatch-tiles';
   function ctmClose() { $('#ctmOverlay').removeClass('open'); clearInterval(ctmPoll); ctmPoll = null; ctmDid = null; }
   $('#shipmentList').on('click', '.ctm-open', function () {
     ctmDid = $(this).data('did');
+    clearInterval(ctmPoll);
+    ctmClearMarker();              // drop the previous trip's marker
     const lat = parseFloat($(this).data('lat')), lng = parseFloat($(this).data('lng'));
     const label = String($(this).data('label') || '');
     $('#ctmTitle').text(label || 'Live Location');

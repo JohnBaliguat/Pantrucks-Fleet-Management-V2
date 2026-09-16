@@ -220,30 +220,39 @@
     eqMap.setView(ll, z, { animate: true });
   }
 
+  function eqClearMarker() {
+    if (eqMarker && eqMap) { eqMap.removeLayer(eqMarker); eqMarker = null; }
+  }
+
   function eqPollPosition() {
     if (!eqTarget) return;
-    $.getJSON('php/fetch/unit_live_position.php', { code: eqTarget }, function (res) {
-      if (res.status !== 'success') { $('#equipmentMapMeta').text(res.message || 'Could not load position.'); return; }
-      if (!res.linked) {
-        $('#equipmentMapMeta').html('<span class="text-muted">No Geotab device linked to this unit.</span>');
-        return;
-      }
+    var requested = eqTarget;
+    $.getJSON('php/fetch/unit_live_position.php', { code: requested }, function (res) {
+      // Ignore a response that arrived after the user switched units.
+      if (requested !== eqTarget) return;
+      if (res.status !== 'success' || res.code !== eqTarget) { $('#equipmentMapMeta').text(res.message || 'Could not load position.'); return; }
       if (!res.has_position) {
-        $('#equipmentMapMeta').html('<span class="text-muted">Waiting for the first Geotab fix…</span>');
+        eqClearMarker();
+        $('#equipmentMapMeta').html(res.linked
+          ? '<span class="text-muted">Linked to Geotab · waiting for the first fix…</span>'
+          : '<span class="text-muted">No Geotab device, and no driver-phone GPS yet.</span>');
         return;
       }
+      var src = res.pos_source === 'geotab' ? 'Live (Geotab)' : 'Driver phone';
       eqSetMarker(res.lat, res.lng,
         escapeHtml(res.code) + '<br>' + escapeHtml(res.location || '') +
         (res.speed != null ? '<br>' + Number(res.speed).toFixed(0) + ' km/h' : ''));
       $('#equipmentMapMeta').html(
-        '<span class="eq-live-dot"></span>Live · ' + escapeHtml(res.location || 'On the move') +
+        '<span class="eq-live-dot"></span>' + src + ' · ' + escapeHtml(res.location || 'On the move') +
         ' · updated ' + escapeHtml(formatDateTime(res.position_at)) +
-        (res.communicating ? '' : ' · <span class="text-warning">device idle</span>'));
+        (res.pos_source === 'geotab' && !res.communicating ? ' · <span class="text-warning">device idle</span>' : ''));
     }).fail(function () { $('#equipmentMapMeta').text('Could not reach the position feed.'); });
   }
 
   function eqStartMap(code, lat, lng) {
     eqTarget = code;
+    clearInterval(eqPollTimer);
+    eqClearMarker();               // drop the previous unit's marker
     $('#equipmentMapWrap').prop('hidden', false);
     $('#equipmentMapMeta').html('<span class="text-muted">Loading position…</span>');
     // Build the map after the modal is visible so tiles size correctly.
