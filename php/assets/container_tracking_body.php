@@ -432,7 +432,8 @@ while ($gres && ($gr = ($gres)->fetch())) { $gensetNames[] = $gr['unit_name']; }
         </div>
         <div class="modal-body">
           <div id="ctMap" style="height:360px;width:100%;border-radius:12px;border:1px solid #dce8f8;"></div>
-          <div class="mt-2" style="font-size:12px;color:#5f728f" id="ctMapMeta"></div>
+          <div class="mt-2" style="font-size:13px" id="ctRouteMeta"></div>
+          <div class="mt-1" style="font-size:12px;color:#5f728f" id="ctMapMeta"></div>
         </div>
       </div>
     </div>
@@ -442,7 +443,7 @@ while ($gres && ($gr = ($gres)->fetch())) { $gensetNames[] = $gr['unit_name']; }
     function escapeHtml(s) { return $('<div>').text(s == null ? '' : s).html(); }
 
     // ----- Live satellite map (Esri World Imagery via Leaflet) -----------
-    var ctMap = null, ctMarker = null, ctPoll = null, ctDid = null, ctMapModal = null;
+    var ctMap = null, ctMarker = null, ctPoll = null, ctDid = null, ctMapModal = null, ctRouteLayer = null;
 
     function ctBuildMap() {
       if (typeof L === 'undefined') {
@@ -466,10 +467,47 @@ while ($gres && ($gr = ($gres)->fetch())) { $gensetNames[] = $gr['unit_name']; }
       if (!ctMarker) { ctMarker = L.marker(ll).addTo(ctMap); }
       else { ctMarker.setLatLng(ll); }
       ctMarker.bindPopup(label);
-      ctMap.setView(ll, Math.max(ctMap.getZoom(), 15), { animate: true });
+      // When a route is shown, keep the whole trip framed; otherwise centre on truck.
+      if (!ctRouteLayer) { ctMap.setView(ll, Math.max(ctMap.getZoom(), 15), { animate: true }); }
     }
 
     function ctClearMarker() { if (ctMarker && ctMap) { ctMap.removeLayer(ctMarker); ctMarker = null; } }
+    function ctClearRoute() { if (ctRouteLayer && ctMap) { ctMap.removeLayer(ctRouteLayer); ctRouteLayer = null; } }
+
+    // Draw the trip's origin, destination, and road route once per open.
+    function ctLoadRoute(did) {
+      $.getJSON('php/fetch/dispatch_route.php', { d_id: did }, function (res) {
+        if (did !== ctDid || res.status !== 'success' || !ctMap) return;
+        ctClearRoute();
+        var layer = L.layerGroup().addTo(ctMap);
+        var bounds = [];
+        if (res.route && res.route.length > 1) {
+          L.polyline(res.route, { color: '#2563eb', weight: 4, opacity: 0.85 }).addTo(layer);
+          res.route.forEach(function (p) { bounds.push(p); });
+        }
+        if (res.origin) {
+          L.circleMarker([res.origin.lat, res.origin.lng], { radius: 7, color: '#059669', fillColor: '#10b981', fillOpacity: 1 })
+            .bindPopup('Origin: ' + escapeHtml(res.origin.name)).addTo(layer);
+          bounds.push([res.origin.lat, res.origin.lng]);
+        }
+        if (res.destination) {
+          L.circleMarker([res.destination.lat, res.destination.lng], { radius: 8, color: '#b91c1c', fillColor: '#ef4444', fillOpacity: 1 })
+            .bindPopup((res.arrived ? '✓ Arrived · ' : 'Destination: ') + escapeHtml(res.destination.name)).addTo(layer);
+          bounds.push([res.destination.lat, res.destination.lng]);
+        }
+        ctRouteLayer = layer;
+        if (bounds.length > 1) { try { ctMap.fitBounds(bounds, { padding: [30, 30] }); } catch (e) {} }
+        // Arrival banner.
+        if (res.destination) {
+          var badge = res.arrived
+            ? '<span style="color:#16a34a;font-weight:700">✓ Arrived at ' + escapeHtml(res.destination.name) + '</span>'
+            : '<span style="color:#5f728f">En route to ' + escapeHtml(res.destination.name) + '</span>';
+          $('#ctRouteMeta').html(badge);
+        } else {
+          $('#ctRouteMeta').html('<span class="text-muted">No mapped origin/destination for this trip.</span>');
+        }
+      });
+    }
 
     function ctPollPosition() {
       if (!ctDid) return;
@@ -492,7 +530,9 @@ while ($gres && ($gr = ($gres)->fetch())) { $gensetNames[] = $gr['unit_name']; }
       ctDid = did;
       clearInterval(ctPoll);
       ctClearMarker();               // drop the previous trip's marker
+      ctClearRoute();                // and its route
       $('#ctMapTitle').text(label || 'Live Location');
+      $('#ctRouteMeta').empty();
       $('#ctMapMeta').html('<span class="text-muted">Loading position…</span>');
       if (!ctMapModal) { ctMapModal = new bootstrap.Modal(document.getElementById('ctMapModal')); }
       ctMapModal.show();
@@ -500,6 +540,7 @@ while ($gres && ($gr = ($gres)->fetch())) { $gensetNames[] = $gr['unit_name']; }
         if (ctBuildMap() === false || !ctMap) { return; }
         ctMap.invalidateSize();
         if (lat != null && lng != null && !isNaN(lat) && !isNaN(lng)) { ctSetMarker(lat, lng, escapeHtml(label || '')); }
+        ctLoadRoute(did);            // draw origin/destination/road route + arrival
         ctPollPosition();
         clearInterval(ctPoll); ctPoll = setInterval(ctPollPosition, 15000);
       }, 250);
@@ -512,7 +553,7 @@ while ($gres && ($gr = ($gres)->fetch())) { $gensetNames[] = $gr['unit_name']; }
     document.addEventListener('DOMContentLoaded', function () {
       var el = document.getElementById('ctMapModal');
       el.addEventListener('shown.bs.modal', function () { if (ctMap) ctMap.invalidateSize(); });
-      el.addEventListener('hidden.bs.modal', function () { clearInterval(ctPoll); ctPoll = null; ctDid = null; });
+      el.addEventListener('hidden.bs.modal', function () { clearInterval(ctPoll); ctPoll = null; ctDid = null; ctClearRoute(); });
     });
     function normalizeContainerNo(value) {
       var upper = String(value || '').toUpperCase();
