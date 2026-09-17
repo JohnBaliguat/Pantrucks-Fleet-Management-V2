@@ -1,0 +1,347 @@
+/* =========== settings css ============== */
+      .profile-image {
+        margin-right: 20px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .profile-image img {
+        width: 100%;
+      }
+
+      .profile-image .update-image {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 30px;
+        height: 30px;
+        background: #efefef;
+        border: 2px solid #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 50%;
+        cursor: pointer;
+        z-index: 99;
+      }
+
+      .profile-image .update-image:hover {
+        opacity: 0.9;
+      }
+
+      .profile-image .update-image input {
+        opacity: 0;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+        z-index: 99;
+      }
+
+      .profile-image .update-image label {
+        cursor: pointer;
+        z-index: 99;
+      }
+
+
+      .booking-card {
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 12px;
+        background: #fff;
+        box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .booking-card:hover {
+        background: #f9f9f9;
+      }
+
+      .status {
+        font-weight: 500;
+        font-size: 0.9rem;
+      }
+
+      .status.completed {
+        color: green;
+      }
+
+      .status.in-progress {
+        color: orange;
+      }
+
+      .status.canceled {
+        color: red;
+      }
+
+
+      /* Mobile Bottom Navigation */
+      .mobile-nav {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #fff;
+        border-radius: 50px;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 10px 15px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        width: 90%;
+        max-width: 450px;
+        z-index: 999;
+      }
+
+      /* Nav items */
+      .mobile-nav .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-decoration: none;
+        font-size: 11px;
+        color: #355aff;
+        transition: all 0.3s ease;
+        padding: 8px 12px;
+        border-radius: 30px;
+        background: transparent;
+        border: none;
+      }
+
+      /* Icons */
+      .mobile-nav .nav-item iconify-icon {
+        font-size: 22px;
+        margin-bottom: 2px;
+      }
+
+      /* Active state */
+      .mobile-nav .nav-item.active {
+        background: rgba(53, 141, 255, 0.15);
+        font-weight: 600;
+      }
+      .mobile-nav .nav-item.active iconify-icon {
+        color: #355aff;
+      }
+
+      /* SOS button */
+      .mobile-nav .sos-btn {
+        color: #fff !important;
+        background: #e63946 !important;
+        border-radius: 40px;
+        padding: 8px 14px;
+      }
+      .mobile-nav .sos-btn iconify-icon {
+        color: #fff;
+      }
+
+      /* Show only on mobile */
+      @media (min-width: 768px) {
+        .mobile-nav {
+          display: none;
+        }
+      }
+      @media (max-width: 768px) {
+        #menu{
+          display: none;
+        }
+      }
+
+ /* Card wrapper */
+      .product-card {
+        border-radius: 12px;
+        padding: 14px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+      }
+
+      /* image box */
+      .product-card .thumb {
+        flex: 0 0 110px;
+        height: 88px;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+      }
+
+      .product-card .thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      /* content area */
+      .product-card .content {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+
+      .product-card .content h5 {
+        margin: 0;
+        font-weight: 700;
+        color: #1f2937;
+        /* dark */
+        font-size: 1rem;
+      }
+
+      .product-card .content p {
+        margin: 6px 0 0;
+        font-size: 0.9rem;
+        color: rgba(31, 41, 55, 0.75);
+      }
+
+      /* price + button container */
+      .product-card .meta {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+        flex: 0 0 110px;
+        min-width: 90px;
+      }
+
+      .product-card .price {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #1f2937;
+        margin-left: auto;
+      }
+
+      .buy-btn {
+        border-radius: 8px;
+        padding: 6px 10px;
+        font-size: 0.86rem;
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
+        border: none;
+        background: #111827;
+        color: #fff;
+      }
+
+      /* small recessed look for some cards */
+      .soft-border {
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+
+
+      .variant-pale {
+        background: #f8faf9;
+        color: #111827;
+      }
+
+      /* make price text slightly lighter on dark variant */
+      .variant-dark .price {
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .variant-dark .content p {
+        color: rgba(255, 255, 255, 0.85);
+      }
+
+      .variant-dark .buy-btn {
+        background: #111827;
+      }
+
+      /* responsive */
+      @media (max-width: 360px) {
+        .product-card {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .product-card .meta {
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .product-card .thumb {
+          height: 160px;
+          width: 100%;
+        }
+
+        .product-card .meta {
+          flex: none;
+          gap: 6px;
+          margin-top: 8px;
+        }
+      }
+
+
+      /* 📱 Responsive for 360px screens */
+      @media (max-width: 412px) {
+        .profile-image {
+          margin-right: 10px;
+          text-align: center;
+        }
+
+        .profile-image img {
+          max-width: 100px; /* smaller on mobile */
+        }
+
+        .profile-image .update-image {
+          width: 24px;
+          height: 24px;
+        }
+
+        .booking-card {
+          padding: 10px;
+          margin-bottom: 10px;
+        }
+
+        .status {
+          font-size: 0.8rem; /* smaller font */
+        }
+      }
+
+      /* 📱 Responsive for 360px screens */
+    @media (max-width: 412px) {
+      /* === Card Row === */
+      .row.g-3.mb-3 .col-6 {
+        flex: 0 0 100%;   /* stack cards vertically */
+        max-width: 100%;
+      }
+
+      .card .card-body {
+        padding: 10px !important;
+      }
+
+      .card h6 {
+        font-size: 11px !important;
+      }
+
+      .card .badge {
+        font-size: 13px !important;
+        font-weight: 600;
+      }
+
+      .round-48 {
+        width: 36px;
+        height: 36px;
+      }
+
+      .ti {
+        font-size: 14px !important;
+      }
+
+      /* === Tabs === */
+      .nav-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+      }
+
+      .nav-tabs .nav-item {
+        flex: 0 0 auto; /* prevent shrinking */
+      }
+
+      .nav-tabs .nav-link {
+        font-size: 12px;
+        padding: 6px 10px;
+      }
+    }

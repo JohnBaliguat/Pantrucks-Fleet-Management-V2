@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">Pantrucks Driver</string>
+    <string name="location_permission_title">Allow location access</string>
+    <string name="location_permission_message">The driver app needs your location for live trip updates, SOS, and site activity timestamps.</string>
+    <string name="allow">Allow</string>
+    <string name="not_now">Not now</string>
+    <string name="file_chooser_title">Upload trip file</string>
+    <string name="file_chooser_error">No file chooser is available on this device.</string>
+    <string name="download_started">Download started</string>
+</resources>

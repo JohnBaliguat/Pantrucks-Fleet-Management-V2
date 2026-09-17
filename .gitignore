@@ -10,6 +10,7 @@ table-fetch/error_log.txt
 .env
 .env.local
 *.env
+php/config/db.php
 php/config/microsoft_sso.php
 php/config/vapid.php
 php/config/geotab.php

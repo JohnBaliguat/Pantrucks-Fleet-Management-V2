@@ -1,0 +1,199 @@
+{
+    "C:\/xampp\/htdocs\/Fleet Management New\/HR Admin\/dashboard.php": [
+        "group_concat"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/HR\/dashboard.php": [
+        "group_concat"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/chartjs\/getShopRescueCount.php": [
+        "bind_param"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/chartjs\/getTrailerUtilization.php": [
+        "bind_param"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/chartjs\/getTripsVsTruck.php": [
+        "bind_param"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/chartjs\/getTruckUtilization.php": [
+        "bind_param"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/chartjs\/get_trips_by_customer.php": [
+        "bind_param"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/chartjs\/get_trips_by_segment.php": [
+        "bind_param"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/crud\/add\/addRecord.php": [
+        "bind_result",
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/crud\/add\/addbooking.php": [
+        "bind_result",
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/crud\/add\/addbooking1.php": [
+        "bind_result",
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/crud\/add\/save_push_subscription.php": [
+        "on_duplicate_key"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/crud\/update\/updateRecord.php": [
+        "bind_result"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/crud\/update\/update_rescue_status.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/crud\/update\/update_segment.php": [
+        "bind_param",
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/crud\/update\/update_tripDateTime1.php": [
+        "bind_param"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/crud\/update\/update_unit_status.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/fetch\/active_containers.php": [
+        "bind_param"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/fetch\/active_dispatch_by_truck.php": [
+        "bind_param"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/fetch\/get_gensets.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/fetch\/get_unit_std.php": [
+        "bind_result"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/fetch\/list_booking_nos.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/fetch\/messages.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/fetch\/messages_unread.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/fetch\/performance_driver_breakdown.php": [
+        "bind_param",
+        "date_format"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/fetch\/violation_driver_breakdown.php": [
+        "bind_param"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/fetch\/visual_dashboard_summary.php": [
+        "bind_param"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/fetch\/visual_manager_recommendations.php": [
+        "bind_param"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/operations\/add_fuel_inventory.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/operations\/assign_booking.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/operations\/assign_booking1.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/operations\/assign_bookingCTH.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/operations\/assign_booking_dnd.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/operations\/assign_service_trip.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/operations\/block_unit.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/operations\/cancel_segment.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/operations\/checkin_checkout.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/operations\/client_book.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/operations\/client_book_cth.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/operations\/editbooking.php": [
+        "bind_result",
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/operations\/gate_checkin.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/operations\/gate_queue_add.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/operations\/incident_reassign.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/operations\/insert_violation.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/operations\/mark_cth_empty_return.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/operations\/mark_loaded.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/operations\/report_incident.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/operations\/save_attend.php": [
+        "bind_result",
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/operations\/save_attendance.php": [
+        "bind_result",
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/operations\/unblock_unit.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/reports\/performance-driver-report.php": [
+        "bind_param",
+        "date_format"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/reports\/rescue-report.php": [
+        "group_concat"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/reports\/shop-report.php": [
+        "group_concat"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/php\/reports\/violation-driver-report.php": [
+        "bind_param"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/reports\/driver-trip-report.php": [
+        "bind_param"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/table-fetch\/fetch_rescue_report.php": [
+        "group_concat"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/table-fetch\/fetch_shop_report.php": [
+        "group_concat"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/table-fetch\/fetch_trailer_movement.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/table-fetch\/fetch_truck_movement.php": [
+        "pt_todo"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/table-fetch\/performance-driver-trips.php": [
+        "bind_param",
+        "date_format"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/table-fetch\/trip-details.php": [
+        "date_format"
+    ],
+    "C:\/xampp\/htdocs\/Fleet Management New\/table-fetch\/violation-driver-records.php": [
+        "bind_param",
+        "date_format"
+    ]
+}

@@ -1,0 +1,15 @@
+/* DataTables Column Filter CSS */
+/* Styles for the filter row inputs */
+
+table.dataTable thead .filters th {
+  padding: 4px;
+}
+
+table.dataTable thead .filters input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 6px;
+  font-size: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}

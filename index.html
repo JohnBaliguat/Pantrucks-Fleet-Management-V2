@@ -1,0 +1,1652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pantrucks - Modern Fleet Management System</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary-color: #0f172a;
+            --accent-color: #06b6d4;
+            --gradient-start: #2563eb;
+            --gradient-end: #06b6d4;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --bg-light: #f8fafc;
+            --white: #ffffff;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-light);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 5px;
+        }
+
+        /* Navigation */
+        .navbar {
+            transition: all 0.3s ease;
+            padding: 1rem 0;
+        }
+        
+        .navbar.scrolled {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 0.5rem 0;
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-link {
+            font-weight: 500;
+            color: var(--text-dark) !important;
+            margin: 0 0.5rem;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .btn-primary-custom {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            border: none;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+            color: white;
+        }
+
+        .btn-outline-custom {
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            background: transparent;
+        }
+
+        .btn-outline-custom:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section */
+        .hero-section {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0f9ff 100%);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+        }
+
+        .hero-bg-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(37, 99, 235, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.05) 0%, transparent 50%);
+            z-index: 0;
+        }
+
+        .floating-shape {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.4;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .shape-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--primary-color);
+            top: -100px;
+            right: -100px;
+            animation-delay: 0s;
+        }
+
+        .shape-2 {
+            width: 300px;
+            height: 300px;
+            background: var(--accent-color);
+            bottom: -50px;
+            left: -50px;
+            animation-delay: 5s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.25rem;
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            line-height: 1.8;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .hero-image-container {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-dashboard {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+            padding: 2rem;
+            transform: perspective(1000px) rotateY(-5deg) rotateX(5deg);
+            transition: transform 0.5s ease;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .hero-dashboard:hover {
+            transform: perspective(1000px) rotateY(0deg) rotateX(0deg);
+        }
+
+        .dashboard-header {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .dot-red { background: #ff5f57; }
+        .dot-yellow { background: #febc2e; }
+        .dot-green { background: #28c840; }
+
+        .dashboard-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .dash-card {
+            background: var(--bg-light);
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .dash-card-header {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .dash-card-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .progress-bar-custom {
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+            border-radius: 3px;
+            width: 75%;
+            animation: progressAnimation 2s ease-out;
+        }
+
+        @keyframes progressAnimation {
+            from { width: 0; }
+            to { width: 75%; }
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 6rem 0;
+            background: white;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-tag {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--primary-color);
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+        }
+
+        .section-subtitle {
+            font-size: 1.125rem;
+            color: var(--text-light);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            border: 1px solid #e2e8f0;
+            transition: all 0.4s ease;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border-color: transparent;
+        }
+
+        .feature-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(6, 182, 212, 0.1));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover .feature-icon {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: var(--secondary-color);
+        }
+
+        .feature-description {
+            color: var(--text-light);
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        /* How It Works Section */
+        .how-it-works {
+            padding: 6rem 0;
+            background: var(--bg-light);
+            position: relative;
+        }
+
+        .step-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+
+        .step-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+
+        .step-number {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25rem;
+            margin: 0 auto 1.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-connector {
+            position: absolute;
+            top: 25px;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+            transform: translateX(50%);
+            z-index: 1;
+        }
+
+        .step-card:last-child .step-connector {
+            display: none;
+        }
+
+        /* Solutions Section */
+        .solutions-section {
+            padding: 6rem 0;
+            background: white;
+        }
+
+        .solution-tab {
+            border: none;
+            background: transparent;
+            padding: 1rem 2rem;
+            font-weight: 600;
+            color: var(--text-light);
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .solution-tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .solution-content {
+            background: var(--bg-light);
+            border-radius: 20px;
+            padding: 3rem;
+            margin-top: 2rem;
+        }
+
+        .solution-image {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+        }
+
+        /* Testimonials Section */
+        .testimonials-section {
+            padding: 6rem 0;
+            background: linear-gradient(135deg, var(--secondary-color), #1e293b);
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .testimonial-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            height: 100%;
+        }
+
+        .testimonial-text {
+            font-size: 1.125rem;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+            font-style: italic;
+            opacity: 0.9;
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .author-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: white;
+        }
+
+        .author-info h5 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .author-info span {
+            font-size: 0.875rem;
+            opacity: 0.7;
+        }
+
+        /* Pricing Section */
+        .pricing-section {
+            padding: 6rem 0;
+            background: var(--bg-light);
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 24px;
+            padding: 2.5rem;
+            border: 2px solid transparent;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pricing-card.featured {
+            border-color: var(--primary-color);
+            transform: scale(1.05);
+            box-shadow: 0 25px 50px rgba(37, 99, 235, 0.15);
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .pricing-card.featured:hover {
+            transform: scale(1.05) translateY(-10px);
+        }
+
+        .pricing-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            padding: 0.5rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border-bottom-left-radius: 16px;
+        }
+
+        .pricing-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .pricing-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-price {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .pricing-price span {
+            font-size: 1rem;
+            color: var(--text-light);
+            font-weight: 400;
+        }
+
+        .pricing-features {
+            list-style: none;
+            padding: 0;
+            margin: 2rem 0;
+        }
+
+        .pricing-features li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .pricing-features li i {
+            color: var(--success);
+            font-size: 1.25rem;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 6rem 0;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.3;
+        }
+
+        .cta-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            color: white;
+        }
+
+        .cta-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .cta-subtitle {
+            font-size: 1.125rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .btn-white {
+            background: white;
+            color: var(--primary-color);
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            border: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .btn-white:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            color: var(--primary-dark);
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--secondary-color);
+            color: white;
+            padding: 4rem 0 2rem;
+        }
+
+        .footer-brand {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            display: inline-block;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .footer-description {
+            color: #94a3b8;
+            line-height: 1.7;
+            margin-bottom: 2rem;
+        }
+
+        .footer-links h5 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: white;
+        }
+
+        .footer-links ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-links a {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .footer-links a:hover {
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .social-links a {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+
+        .social-links a:hover {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            transform: translateY(-3px);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin-top: 3rem;
+            padding-top: 2rem;
+            text-align: center;
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        /* Animations */
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        .fade-in-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 991px) {
+            .hero-title {
+                font-size: 2.5rem;
+            }
+            .hero-dashboard {
+                margin-top: 3rem;
+                transform: none;
+            }
+            .step-connector {
+                display: none;
+            }
+            .pricing-card.featured {
+                transform: none;
+            }
+            .pricing-card.featured:hover {
+                transform: translateY(-10px);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 2rem;
+            }
+            .section-title {
+                font-size: 1.75rem;
+            }
+            .hero-stats {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        /* Loading Animation */
+        .loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+
+        .loader.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(37, 99, 235, 0.1);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Loader -->
+    <div class="loader" id="loader">
+        <div class="loader-spinner"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-truck-front-fill me-2"></i>Pantrucks
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#solutions">Solutions</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#pricing" hidden>Pricing</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#testimonials" hidden>Testimonials</a></li>
+                    <li class="nav-item ms-lg-3">
+                        <a class="btn btn-outline-custom" href="#contact">Login</a>
+                    </li>
+                    <li class="nav-item ms-2">
+                        <a class="btn btn-primary-custom" href="#demo">Get Started</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-bg-pattern"></div>
+        <div class="floating-shape shape-1"></div>
+        <div class="floating-shape shape-2"></div>
+        
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6 hero-content fade-in-up">
+                    <div class="badge bg-primary bg-opacity-10 text-primary mb-3 px-3 py-2 rounded-pill">
+                        <i class="bi bi-stars me-2"></i>Next-Gen Fleet Management
+                    </div>
+                    <h1 class="hero-title">Streamline Your Fleet Operations with Intelligence</h1>
+                    <p class="hero-subtitle">
+                        Pantrucks provides real-time tracking, predictive maintenance, and route optimization 
+                        to reduce costs and maximize efficiency for modern logistics companies.
+                    </p>
+                    <div class="d-flex flex-wrap gap-3">
+                        <a href="#demo" class="btn btn-primary-custom btn-lg">
+                            Start Free Trial <i class="bi bi-arrow-right ms-2"></i>
+                        </a>
+                        <a href="#video" class="btn btn-outline-custom btn-lg">
+                            <i class="bi bi-play-circle me-2"></i>Watch Demo
+                        </a>
+                    </div>
+                    
+                    <div class="hero-stats">
+                        <div class="stat-item">
+                            <span class="stat-number" data-target="500">0</span>
+                            <span class="stat-label">Fleet Partners</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" data-target="50">0</span>
+                            <span class="stat-label">Countries</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number" data-target="99">0</span>
+                            <span class="stat-label">% Uptime</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6 hero-image-container fade-in-up" style="animation-delay: 0.2s;">
+                    <div class="hero-dashboard">
+                        <div class="dashboard-header">
+                            <div class="dot dot-red"></div>
+                            <div class="dot dot-yellow"></div>
+                            <div class="dot dot-green"></div>
+                        </div>
+                        <div class="dashboard-content">
+                            <div class="dash-card">
+                                <div class="dash-card-header">Active Vehicles</div>
+                                <div class="dash-card-value">247</div>
+                                <div class="progress-bar-custom">
+                                    <div class="progress-fill"></div>
+                                </div>
+                            </div>
+                            <div class="dash-card">
+                                <div class="dash-card-header">Fuel Efficiency</div>
+                                <div class="dash-card-value text-success">+12%</div>
+                                <i class="bi bi-arrow-up-right-circle-fill text-success float-end"></i>
+                            </div>
+                            <div class="dash-card">
+                                <div class="dash-card-header">Avg. Delivery Time</div>
+                                <div class="dash-card-value">2.4h</div>
+                                <small class="text-muted">↓ 15% from last month</small>
+                            </div>
+                            <div class="dash-card">
+                                <div class="dash-card-header">Maintenance Alerts</div>
+                                <div class="dash-card-value text-warning">3</div>
+                                <i class="bi bi-exclamation-triangle-fill text-warning float-end"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 p-3 bg-light rounded-3 border">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <small class="text-muted">Live Route Tracking</small>
+                                <span class="badge bg-success bg-opacity-10 text-success">Live</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-primary" style="width: 65%"></div>
+                            </div>
+                            <div class="d-flex justify-content-between mt-2">
+                                <small class="text-muted">Warehouse A</small>
+                                <small class="text-primary fw-bold">65% Complete</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section" id="features">
+        <div class="container">
+            <div class="section-header fade-in-up">
+                <span class="section-tag">Powerful Features</span>
+                <h2 class="section-title">Everything You Need to Manage Your Fleet</h2>
+                <p class="section-subtitle">
+                    Comprehensive tools designed to optimize every aspect of your fleet operations, 
+                    from tracking to maintenance and compliance.
+                </p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-4 fade-in-up">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-geo-alt-fill"></i>
+                        </div>
+                        <h3 class="feature-title">Real-Time GPS Tracking</h3>
+                        <p class="feature-description">
+                            Monitor your entire fleet with precision GPS tracking. Get instant location updates, 
+                            geofencing alerts, and historical route analysis to optimize operations.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-4 fade-in-up" style="animation-delay: 0.1s;">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-cpu-fill"></i>
+                        </div>
+                        <h3 class="feature-title">Predictive Maintenance</h3>
+                        <p class="feature-description">
+                            AI-powered diagnostics predict vehicle failures before they happen. 
+                            Reduce downtime by 40% with automated maintenance scheduling and alerts.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-4 fade-in-up" style="animation-delay: 0.2s;">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-map-fill"></i>
+                        </div>
+                        <h3 class="feature-title">Smart Route Optimization</h3>
+                        <p class="feature-description">
+                            Dynamic routing algorithms consider traffic, weather, and delivery windows 
+                            to minimize fuel costs and maximize delivery efficiency.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-4 fade-in-up">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <h3 class="feature-title">Compliance & Safety</h3>
+                        <p class="feature-description">
+                            Automated ELD compliance, driver behavior monitoring, and safety scorecards 
+                            ensure regulatory adherence and reduce insurance premiums.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-4 fade-in-up" style="animation-delay: 0.1s;">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-graph-up-arrow"></i>
+                        </div>
+                        <h3 class="feature-title">Advanced Analytics</h3>
+                        <p class="feature-description">
+                            Comprehensive dashboards and custom reports provide insights into fuel consumption, 
+                            driver performance, and operational costs.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-4 fade-in-up" style="animation-delay: 0.2s;">
+                    <div class="feature-card">
+                        <div class="feature-icon">
+                            <i class="bi bi-phone-fill"></i>
+                        </div>
+                        <h3 class="feature-title">Mobile Driver App</h3>
+                        <p class="feature-description">
+                            Empower drivers with intuitive mobile apps for route navigation, 
+                            electronic proof of delivery, and instant communication with dispatch.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works">
+        <div class="container">
+            <div class="section-header fade-in-up">
+                <span class="section-tag">Simple Process</span>
+                <h2 class="section-title">Get Started in Minutes</h2>
+                <p class="section-subtitle">
+                    Seamless onboarding and integration with your existing systems
+                </p>
+            </div>
+
+            <div class="row g-4 position-relative">
+                <div class="col-md-4 fade-in-up">
+                    <div class="step-card">
+                        <div class="step-number">1</div>
+                        <h4 class="mb-3">Connect Your Fleet</h4>
+                        <p class="text-muted mb-0">
+                            Install our OBD-II devices or integrate existing telematics hardware. 
+                            Support for 500+ vehicle models and major manufacturers.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4 fade-in-up" style="animation-delay: 0.2s;">
+                    <div class="step-card">
+                        <div class="step-number">2</div>
+                        <h4 class="mb-3">Configure Dashboard</h4>
+                        <p class="text-muted mb-0">
+                            Customize your command center with drag-and-drop widgets. 
+                            Set up alerts, geofences, and user permissions in minutes.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4 fade-in-up" style="animation-delay: 0.4s;">
+                    <div class="step-card">
+                        <div class="step-number">3</div>
+                        <h4 class="mb-3">Optimize & Scale</h4>
+                        <p class="text-muted mb-0">
+                            Start receiving AI-powered insights immediately. 
+                            Watch efficiency improve as the system learns your operations.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Solutions Section -->
+    <section class="solutions-section" id="solutions">
+        <div class="container">
+            <div class="section-header fade-in-up">
+                <span class="section-tag">Industry Solutions</span>
+                <h2 class="section-title">Tailored for Your Industry</h2>
+                <p class="section-subtitle">
+                    Specialized features designed for different fleet types and operational needs
+                </p>
+            </div>
+
+            <div class="text-center mb-4 fade-in-up">
+                <div class="btn-group" role="group">
+                    <button class="solution-tab active" onclick="switchTab('logistics')">
+                        <i class="bi bi-truck me-2"></i>Logistics
+                    </button>
+                    <button class="solution-tab" onclick="switchTab('construction')">
+                        <i class="bi bi-building me-2"></i>Construction
+                    </button>
+                    <button class="solution-tab" onclick="switchTab('passenger')">
+                        <i class="bi bi-bus-front me-2"></i>Passenger
+                    </button>
+                    <button class="solution-tab" onclick="switchTab('delivery')">
+                        <i class="bi bi-box-seam me-2"></i>Last Mile
+                    </button>
+                </div>
+            </div>
+
+            <div class="solution-content fade-in-up" id="solution-content">
+                <div class="row align-items-center">
+                    <div class="col-lg-6">
+                        <h3 class="mb-4">Long-Haul Logistics</h3>
+                        <ul class="list-unstyled">
+                            <li class="mb-3 d-flex align-items-start">
+                                <i class="bi bi-check-circle-fill text-primary me-3 mt-1"></i>
+                                <div>
+                                    <strong>Hours of Service (HOS) Compliance</strong>
+                                    <p class="text-muted mb-0 small">Automatic logging and alerts for DOT compliance</p>
+                                </div>
+                            </li>
+                            <li class="mb-3 d-flex align-items-start">
+                                <i class="bi bi-check-circle-fill text-primary me-3 mt-1"></i>
+                                <div>
+                                    <strong>Fuel Card Integration</strong>
+                                    <p class="text-muted mb-0 small">Seamless integration with major fuel card providers</p>
+                                </div>
+                            </li>
+                            <li class="mb-3 d-flex align-items-start">
+                                <i class="bi bi-check-circle-fill text-primary me-3 mt-1"></i>
+                                <div>
+                                    <strong>Load Optimization</strong>
+                                    <p class="text-muted mb-0 small">Maximize cargo space and reduce empty miles</p>
+                                </div>
+                            </li>
+                            <li class="mb-3 d-flex align-items-start">
+                                <i class="bi bi-check-circle-fill text-primary me-3 mt-1"></i>
+                                <div>
+                                    <strong>IFTA Reporting</strong>
+                                    <p class="text-muted mb-0 small">Automated fuel tax reporting across jurisdictions</p>
+                                </div>
+                            </li>
+                        </ul>
+                        <a href="#" class="btn btn-primary-custom mt-3">Learn More</a>
+                    </div>
+                    <div class="col-lg-6 mt-4 mt-lg-0">
+                        <div class="solution-image">
+                            <div class="ratio ratio-16x9 bg-light rounded-3 d-flex align-items-center justify-content-center">
+                                <div class="text-center">
+                                    <i class="bi bi-truck display-1 text-primary opacity-25"></i>
+                                    <p class="mt-3 text-muted">Logistics Dashboard Preview</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials-section" id="testimonials">
+        <div class="container">
+            <div class="section-header fade-in-up text-white">
+                <span class="section-tag" style="background: rgba(255,255,255,0.1); color: white;">Testimonials</span>
+                <h2 class="section-title text-white">Trusted by Industry Leaders</h2>
+                <p class="section-subtitle" style="color: rgba(255,255,255,0.8);">
+                    See how companies are transforming their fleet operations with Pantrucks
+                </p>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-4 fade-in-up">
+                    <div class="testimonial-card">
+                        <div class="mb-3 text-warning">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <p class="testimonial-text">
+                            "Pantrucks reduced our fuel costs by 23% in the first quarter alone. 
+                            The predictive maintenance feature has been a game-changer for our uptime."
+                        </p>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">JD</div>
+                            <div class="author-info">
+                                <h5>James Davidson</h5>
+                                <span>Fleet Director, FastFreight Inc.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 fade-in-up" style="animation-delay: 0.2s;">
+                    <div class="testimonial-card">
+                        <div class="mb-3 text-warning">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <p class="testimonial-text">
+                            "The real-time tracking and driver app have improved our customer satisfaction scores 
+                            dramatically. Implementation was seamless and support is exceptional."
+                        </p>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">SM</div>
+                            <div class="author-info">
+                                <h5>Sarah Mitchell</h5>
+                                <span>COO, CityTransit Solutions</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4 fade-in-up" style="animation-delay: 0.4s;">
+                    <div class="testimonial-card">
+                        <div class="mb-3 text-warning">
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                            <i class="bi bi-star-fill"></i>
+                        </div>
+                        <p class="testimonial-text">
+                            "We evaluated 5 different platforms. Pantrucks offered the best combination 
+                            of features, ease of use, and ROI. Our dispatch efficiency increased 35%."
+                        </p>
+                        <div class="testimonial-author">
+                            <div class="author-avatar">RK</div>
+                            <div class="author-info">
+                                <h5>Robert Kim</h5>
+                                <span>Operations Manager, BuildMax Construction</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing-section" id="pricing">
+        <div class="container">
+            <div class="section-header fade-in-up">
+                <span class="section-tag">Pricing Plans</span>
+                <h2 class="section-title">Simple, Transparent Pricing</h2>
+                <p class="section-subtitle">
+                    Choose the plan that fits your fleet size and operational needs
+                </p>
+            </div>
+
+            <div class="row g-4 justify-content-center align-items-center">
+                <div class="col-md-4 fade-in-up">
+                    <div class="pricing-card">
+                        <div class="pricing-header">
+                            <h3 class="pricing-name">Starter</h3>
+                            <div class="pricing-price">$29<span>/vehicle/month</span></div>
+                            <p class="text-muted small">Perfect for small fleets</p>
+                        </div>
+                        <ul class="pricing-features">
+                            <li><i class="bi bi-check-circle-fill"></i> Real-time GPS tracking</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Basic route optimization</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Mobile driver app</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Email support</li>
+                            <li><i class="bi bi-check-circle-fill"></i> 3-month data history</li>
+                        </ul>
+                        <button class="btn btn-outline-custom w-100">Get Started</button>
+                    </div>
+                </div>
+
+                <div class="col-md-4 fade-in-up" style="animation-delay: 0.2s;">
+                    <div class="pricing-card featured">
+                        <div class="pricing-badge">Most Popular</div>
+                        <div class="pricing-header">
+                            <h3 class="pricing-name">Professional</h3>
+                            <div class="pricing-price">$49<span>/vehicle/month</span></div>
+                            <p class="text-muted small">For growing operations</p>
+                        </div>
+                        <ul class="pricing-features">
+                            <li><i class="bi bi-check-circle-fill"></i> Everything in Starter</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Predictive maintenance</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Advanced analytics</li>
+                            <li><i class="bi bi-check-circle-fill"></i> 24/7 phone support</li>
+                            <li><i class="bi bi-check-circle-fill"></i> API access</li>
+                            <li><i class="bi bi-check-circle-fill"></i> 1-year data history</li>
+                        </ul>
+                        <button class="btn btn-primary-custom w-100">Get Started</button>
+                    </div>
+                </div>
+
+                <div class="col-md-4 fade-in-up" style="animation-delay: 0.4s;">
+                    <div class="pricing-card">
+                        <div class="pricing-header">
+                            <h3 class="pricing-name">Enterprise</h3>
+                            <div class="pricing-price">Custom</div>
+                            <p class="text-muted small">Large fleet solutions</p>
+                        </div>
+                        <ul class="pricing-features">
+                            <li><i class="bi bi-check-circle-fill"></i> Everything in Professional</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Dedicated account manager</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Custom integrations</li>
+                            <li><i class="bi bi-check-circle-fill"></i> SLA guarantee</li>
+                            <li><i class="bi bi-check-circle-fill"></i> Unlimited data history</li>
+                            <li><i class="bi bi-check-circle-fill"></i> On-premise deployment</li>
+                        </ul>
+                        <button class="btn btn-outline-custom w-100">Contact Sales</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section" id="demo">
+        <div class="container">
+            <div class="cta-content fade-in-up">
+                <h2 class="cta-title">Ready to Transform Your Fleet?</h2>
+                <p class="cta-subtitle">
+                    Join 500+ companies already optimizing their operations with Pantrucks. 
+                    Start your 14-day free trial today.
+                </p>
+                <div class="d-flex flex-wrap justify-content-center gap-3">
+                    <button class="btn btn-white btn-lg">
+                        Start Free Trial <i class="bi bi-arrow-right ms-2"></i>
+                    </button>
+                    <button class="btn btn-outline-light btn-lg rounded-pill px-4">
+                        <i class="bi bi-calendar-check me-2"></i>Schedule Demo
+                    </button>
+                </div>
+                <p class="mt-4 mb-0 opacity-75 small">
+                    <i class="bi bi-shield-check me-2"></i>No credit card required • Cancel anytime
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4 mb-lg-0">
+                    <a href="#" class="footer-brand">
+                        <i class="bi bi-truck-front-fill me-2"></i>Pantrucks
+                    </a>
+                    <p class="footer-description">
+                        Modern fleet management solutions for the logistics industry. 
+                        Empowering businesses with real-time visibility and intelligent automation.
+                    </p>
+                    <div class="social-links">
+                        <a href="#"><i class="bi bi-twitter-x"></i></a>
+                        <a href="#"><i class="bi bi-linkedin"></i></a>
+                        <a href="#"><i class="bi bi-github"></i></a>
+                        <a href="#"><i class="bi bi-youtube"></i></a>
+                    </div>
+                </div>
+                
+                <div class="col-6 col-lg-2 mb-4 mb-lg-0">
+                    <div class="footer-links">
+                        <h5>Product</h5>
+                        <ul>
+                            <li><a href="#">Features</a></li>
+                            <li><a href="#">Pricing</a></li>
+                            <li><a href="#">Integrations</a></li>
+                            <li><a href="#">API Docs</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="col-6 col-lg-2 mb-4 mb-lg-0">
+                    <div class="footer-links">
+                        <h5>Company</h5>
+                        <ul>
+                            <li><a href="#">About Us</a></li>
+                            <li><a href="#">Careers</a></li>
+                            <li><a href="#">Blog</a></li>
+                            <li><a href="#">Press</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="col-6 col-lg-2 mb-4 mb-lg-0">
+                    <div class="footer-links">
+                        <h5>Resources</h5>
+                        <ul>
+                            <li><a href="#">Help Center</a></li>
+                            <li><a href="#">Community</a></li>
+                            <li><a href="#">Webinars</a></li>
+                            <li><a href="#">Partners</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="col-6 col-lg-2">
+                    <div class="footer-links">
+                        <h5>Legal</h5>
+                        <ul>
+                            <li><a href="#">Privacy</a></li>
+                            <li><a href="#">Terms</a></li>
+                            <li><a href="#">Security</a></li>
+                            <li><a href="#">Cookies</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2024 Pantrucks Inc. All rights reserved. Made with precision for modern fleets.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Remove loader when page loads
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                document.getElementById('loader').classList.add('hidden');
+            }, 500);
+        });
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', function() {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Intersection Observer for fade-in animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: "0px 0px -50px 0px"
+        };
+
+        const observer = new IntersectionObserver(function(entries) {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    
+                    // Animate numbers if it's a stat number
+                    const statNumbers = entry.target.querySelectorAll('.stat-number');
+                    statNumbers.forEach(num => {
+                        animateValue(num, 0, parseInt(num.getAttribute('data-target')), 2000);
+                    });
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in-up').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Number counting animation
+        function animateValue(obj, start, end, duration) {
+            if (obj.classList.contains('counted')) return;
+            obj.classList.add('counted');
+            
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const value = Math.floor(progress * (end - start) + start);
+                obj.innerHTML = value + (obj.getAttribute('data-target') === '99' ? '<small>%</small>' : '+');
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // Solution tabs switching
+        const solutions = {
+            logistics: {
+                title: 'Long-Haul Logistics',
+                features: [
+                    { title: 'Hours of Service (HOS) Compliance', desc: 'Automatic logging and alerts for DOT compliance' },
+                    { title: 'Fuel Card Integration', desc: 'Seamless integration with major fuel card providers' },
+                    { title: 'Load Optimization', desc: 'Maximize cargo space and reduce empty miles' },
+                    { title: 'IFTA Reporting', desc: 'Automated fuel tax reporting across jurisdictions' }
+                ],
+                icon: 'bi-truck'
+            },
+            construction: {
+                title: 'Construction & Heavy Equipment',
+                features: [
+                    { title: 'Equipment Tracking', desc: 'Monitor utilization of excavators, cranes, and heavy machinery' },
+                    { title: 'Site Geofencing', desc: 'Automated check-in/check-out for job sites' },
+                    { title: 'Maintenance Alerts', desc: 'Heavy-duty maintenance schedules based on engine hours' },
+                    { title: 'Theft Prevention', desc: 'Immediate alerts for unauthorized equipment movement' }
+                ],
+                icon: 'bi-building'
+            },
+            passenger: {
+                title: 'Passenger Transportation',
+                features: [
+                    { title: 'Route Adherence', desc: 'Real-time monitoring of bus and coach routes' },
+                    { title: 'Passenger Counting', desc: 'Automated passenger load tracking' },
+                    { title: 'Driver Behavior', desc: 'Smooth driving scores for passenger comfort' },
+                    { title: 'ETA Notifications', desc: 'Automatic passenger updates on arrival times' }
+                ],
+                icon: 'bi-bus-front'
+            },
+            delivery: {
+                title: 'Last Mile Delivery',
+                features: [
+                    { title: 'Route Sequencing', desc: 'Optimal stop ordering for maximum deliveries per route' },
+                    { title: 'Proof of Delivery', desc: 'Digital signatures, photos, and barcode scanning' },
+                    { title: 'Customer Notifications', desc: 'Automated SMS/email updates for recipients' },
+                    { title: 'Returns Management', desc: 'Streamlined reverse logistics and pickup scheduling' }
+                ],
+                icon: 'bi-box-seam'
+            }
+        };
+
+        function switchTab(industry) {
+            // Update active tab
+            document.querySelectorAll('.solution-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Update content with animation
+            const content = document.getElementById('solution-content');
+            const data = solutions[industry];
+            
+            content.style.opacity = '0';
+            content.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                content.innerHTML = `
+                    <div class="row align-items-center">
+                        <div class="col-lg-6">
+                            <h3 class="mb-4">${data.title}</h3>
+                            <ul class="list-unstyled">
+                                ${data.features.map(f => `
+                                    <li class="mb-3 d-flex align-items-start">
+                                        <i class="bi bi-check-circle-fill text-primary me-3 mt-1"></i>
+                                        <div>
+                                            <strong>${f.title}</strong>
+                                            <p class="text-muted mb-0 small">${f.desc}</p>
+                                        </div>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                            <a href="#" class="btn btn-primary-custom mt-3">Learn More</a>
+                        </div>
+                        <div class="col-lg-6 mt-4 mt-lg-0">
+                            <div class="solution-image">
+                                <div class="ratio ratio-16x9 bg-light rounded-3 d-flex align-items-center justify-content-center">
+                                    <div class="text-center">
+                                        <i class="bi ${data.icon} display-1 text-primary opacity-25"></i>
+                                        <p class="mt-3 text-muted">${data.title} Dashboard Preview</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                content.style.transition = 'all 0.4s ease';
+                content.style.opacity = '1';
+                content.style.transform = 'translateY(0)';
+            }, 300);
+        }
+
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add parallax effect to floating shapes
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const shapes = document.querySelectorAll('.floating-shape');
+            shapes.forEach((shape, index) => {
+                const speed = 0.5 + (index * 0.2);
+                shape.style.transform = `translateY(${scrolled * speed}px)`;
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+<resources>
+    <color name="pt_blue">#D90B02</color>
+    <color name="pt_blue_dark">#B00000</color>
+    <color name="pt_surface">#FFFFFF</color>
+    <color name="pt_on_surface">#101828</color>
+</resources>

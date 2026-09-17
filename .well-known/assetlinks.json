@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.fleet_pantrucks.app.twa",
+      "sha256_cert_fingerprints": [
+        "65:7E:F4:46:2B:0C:F4:C9:60:35:83:43:C0:89:A4:8D:DB:EE:82:58:F4:3E:FC:97:D6:52:88:B3:A6:1C:0E:BB"
+      ]
+    }
+  }
+]
